@@ -1,0 +1,31 @@
+-- OpenRC configuration --
+{
+  startup = { -- APIs to load at startup
+    [1] = {
+      id = "libmanager",
+      file = "/lib/modules/libraries.lua"
+    },
+    [2] = {
+      id = "events",
+      file = "/lib/modules/events.lua"
+    },
+    [3] = {
+      id = "input",
+      file = "/lib/modules/input.lua"
+    },
+    [4] = {
+      id = "components",
+      file = "/lib/modules/components.lua"
+    },
+    [5] = {
+      id = "users",
+      file = "/lib/modules/users.lua"
+    }
+  },
+  daemons = { -- Background services, loaded after multitasking is initialized
+    [1] = {
+      id = "eventd",
+      file = "/lib/services/eventd.lua"
+    }
+  }
+}

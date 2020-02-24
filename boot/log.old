@@ -1,0 +1,1 @@
+[0.07152] Open Kernel 2.0.0[0.07234] Initializing filesystems[0.07274] Stage 1: helpers[0.07319] Stage 2: mounting, unmounting, mount-listing[0.07388] Stage 3: standard FS API[0.07477] Mounting 73de2934-10ac-6470-f09b-9eba071aff01 on [0.07591] Mounting f986e3c1-8da1-b21f-226b-303f32fe2cf8 on /tmp[0.07651] Reading /etc/fstab
