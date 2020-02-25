@@ -6,26 +6,59 @@ _G.shell = {}
 
 shell._VERSION = "Open Shell 2.0.0-pre2"
 
-local pwd = users.home()
-
-local PS1 = "\\w" .. (users.uid() == 0 and "# " or "$ ")
+local PWD = users.home()
+local PS1 = "\\w\\$ "
+local colors = { -- How to color escape sequences
+  ["w"] = 0x55FF55,
+  ["$"] = 0x00ACFF
+}
 local PATH = "/bin:/sbin:/usr/bin"
 
-if not fs.exists(pwd) then
-  fs.makeDirectory(pwd)
+local config = {}
+
+kernel.log("sh: reading config")
+local handle, err = fs.open(PWD .. "/.shconfig")
+if handle then
+  local data = handle:readAll()
+  handle:close()
+  local ok, err = load("return " .. data, "=sh.parse-config", "bt", _G)
+  if ok then
+    local s, r = pcall(ok)
+    if s then
+      config = s
+      colors = colors or config.colors
+    end
+  end
+end
+
+if not fs.exists(PWD) then
+  fs.makeDirectory(PWD)
 end
 
 function shell.pwd()
-  return pwd
+  return PWD
 end
 
 function shell.setPwd(dir)
   checkArg(1, dir, "string")
   if fs.exists(dir) then
-    pwd = dir
+    PWD = dir
     return true
   else
-    return false
+    return false, "No such file or directory"
+  end
+end
+
+function shell.resolvePath(path)
+  checkArg(1, path, "string")
+  if path:sub(1, 1) == "/" then
+    return path
+  else
+    if path:find("..") then -- This is not yet supported
+      return PWD
+    else
+      return fs.clean(PWD .. "/" .. path)
+    end
   end
 end
 
@@ -37,7 +70,7 @@ function shell.parse(...)
       if input[i]:sub(1, 2) == "--" then
         options[input[i]:sub(3)] = true
       else
-        options[input[i]:sub(2)] = true
+        options[input[i]:sub(2,2)] = true
       end
     else
       args:insert(input[i])
@@ -58,8 +91,8 @@ function shell.exec(...) -- It is probably best to call this with pcall, conside
   for path in string.tokenize(":", PATH) do
     check(path .. "/" .. cmd .. ".lua")
     check(path .. "/" .. cmd)
-    check(path)
-    check(path .. ".lua")
+    check(cmd)
+    check(cmd .. ".lua")
   end
   if cmdPath == "" then
     return error("Command not found")
@@ -68,7 +101,7 @@ function shell.exec(...) -- It is probably best to call this with pcall, conside
   if not ok then
     return error(err)
   end
-  local s, r = pcall(function()return ok(table.unpack(exec, 2))end)
+  local s, r = pcall(function()return ok(table.unpack(exec, 2, #exec))end)
   if not s then
     return error(r)
   end
@@ -85,18 +118,19 @@ local function prompt()
       end
     else
       if inEsc then
+        gpu.setForeground(colors[char] or 0xFFFFFF)
         if char == "w" then
-          p = p .. PWD
+          write(PWD)
         elseif char == "$" then
-          p = p .. (users.uid() == 0 and "#" or "$")
+          write(users.uid() == 0 and "#" or "$")
         end
         inEsc = false
       else
-        p = p .. char
+        gpu.setForeground(colors["char"] or 0xFFFFFF)
+        write(char)
       end
     end
   end
-  return p
 end
 
 local function printError(...)
@@ -107,9 +141,11 @@ local function printError(...)
 end
 
 while true do
+  prompt()
   local command = read()
   if command then
     local s,r = pcall(function()shell.exec(command)end)
     if not s then printError(r) end
   end
+  coroutine.yield()
 end

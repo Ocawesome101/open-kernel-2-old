@@ -21,6 +21,8 @@ for addr, ctype in component.list() do
 end
 
 gpu.setResolution(gpu.maxResolution())
+gpu.setForeground(0xFFFFFF)
+gpu.setBackground(0x000000)
 
 local x, y = 1, 1
 local w, h = gpu.getResolution()
@@ -141,16 +143,17 @@ kernel.log(kernel._VERSION .. " booting on " .. _VERSION)
 kernel.log("Total memory: " .. tostring(math.floor(computer.totalMemory() / 1024)) .. "K")
 kernel.log("Free memory: " .. tostring(math.floor(computer.freeMemory() / 1024)) .. "K")
 
-local shutdown = computer.shutdown
+local native_shutdown = computer.shutdown
 computer.shutdown = function(b) -- make sure the log file gets properly closed
   kernel.log("Shutting down")
   bootfs.close(kernelLog)
-  shutdown(b)
+  native_shutdown(b)
 end
 
 local native_error = error
 
 local pullSignal = computer.pullSignal
+local shutdown = computer.shutdown
 function _G.error(err, level)
   if level == -1 or level == "__KPANIC__" then
     verbose = true -- The user should see this
@@ -165,7 +168,7 @@ function _G.error(err, level)
     while true do
       local e, _, id = pullSignal()
       if e == "key_down" and string.char(id):lower() == "s" then
-        computer.shutdown()
+        shutdown()
       end
     end
   else
@@ -184,7 +187,7 @@ local function cleanPath(p)
   checkArg(1, p, "string")
   local path = ""
   for segment in p:gmatch("[^%/]+") do
-    path = path .. "/" .. segment
+    path = path .. "/" .. (segment or "")
   end
   return path
 end
@@ -192,6 +195,9 @@ end
 local function resolve(path) -- Resolve a path to a filesystem proxy
   checkArg(1, path, "string")
   local proxy
+  if path == "/" then
+    return "/", bootfs
+  end
   local path = cleanPath(path)
   for p,cp in pairs(mounts) do
     if path:sub(1, #p) == p then
@@ -202,11 +208,11 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   if proxy then
     return cleanPath(path), proxy
   else
-    return false, "No filesystem mounted"
+    return false, "No filesystems mounted"
   end
 end
 
-kernel.log("Stage 2: mounting, unmounting, mount-listing")
+kernel.log("Stage 2: mounting, unmounting")
 function fs.mount(addr, path)
   checkArg(1, addr, "string")
   checkArg(2, path, "string", "nil")
@@ -225,6 +231,11 @@ function fs.mount(addr, path)
   else
     if component.type(addr) == "filesystem" then
       kernel.log("Mounting " .. addr .. " on " .. path)
+      if fs.makeDirectory then
+        fs.makeDirectory(path)
+      else
+        bootfs.makeDirectory(path)
+      end
       mounts[path] = component.proxy(addr)
     end
   end
@@ -510,7 +521,8 @@ function string.tokenize(sep, ...)
   local i = 1
   setmetatable(words, {__call = function() -- iterators! they're great!
     if words[i] then
-      return words[i]
+      i = i + 1
+      return words[i - 1]
     else
       return nil
     end

@@ -70,7 +70,7 @@ do
   function os.kill(pid)
     checkArg(1, pid, "number")
     if not tasks[pid] then return false, "No such process" end
-    kernel.log("scheduler: Killing task " .. tasks[pid].id " (PID ".. tostring(pid) .. ")")
+    kernel.log("scheduler: Killing task " .. tasks[pid].id .. " (PID ".. tostring(pid) .. ")")
     tasks[pid] = nil
   end
 
@@ -95,7 +95,7 @@ do
     if not tasks[pid] then return false, "No such process" end
     return {name = tasks[pid].id, parent = tasks[pid].parent, pid = tasks[pid].pid}
   end
-
+  
   function os.start() -- Start the scheduler
     os.start = nil
     while #tasks > 0 do
@@ -104,8 +104,8 @@ do
         if coroutine.status(v.coro) ~= "dead" then
           currentpid = k
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
-          if not ok then
-            kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") errored: " .. err)
+          if not ok and err then
+            kernel.log("Task " .. v.id .. " (PID " .. tostring(k) .. "): " .. tostring(ok) .. " " .. tostring(err))
           end
         else
           kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died")

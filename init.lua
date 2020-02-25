@@ -3,7 +3,7 @@
 -- Only edit this line! --
 local flags = {
   init = "/sbin/init.lua",
-  runlevel = 1, -- Runlevel the system should attempt to reach
+  runlevel = 2, -- Runlevel the system should attempt to reach
   verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded
 }
 

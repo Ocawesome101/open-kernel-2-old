@@ -1,1 +1,64 @@
-[0.07152] Open Kernel 2.0.0[0.07234] Initializing filesystems[0.07274] Stage 1: helpers[0.07319] Stage 2: mounting, unmounting, mount-listing[0.07388] Stage 3: standard FS API[0.07477] Mounting 73de2934-10ac-6470-f09b-9eba071aff01 on [0.07591] Mounting f986e3c1-8da1-b21f-226b-303f32fe2cf8 on /tmp[0.07651] Reading /etc/fstab
+[0001.35] Open Kernel 2.0.0-rc1 booting on Lua 5.3
+[0001.35] Total memory: 192K
+[0001.35] Free memory: 24K
+[00001.4] Initializing filesystems
+[00001.4] Stage 1: helpers
+[00001.4] Stage 2: mounting, unmounting
+[00001.4] Stage 3: standard FS API
+[0001.45] Reading /etc/fstab
+[0001.45] Failed to read fstab: File not found
+[0001.45] Setting up utilities
+[0001.45] util: loadfile
+[00001.5] util: table.new
+[00001.5] util: table.copy
+[00001.5] util: string.tokenize
+[00001.5] util: os.sleep
+[0001.55] util: fs.clean
+[0001.55] Loading /sbin/init.lua
+[0001.55] loadfile: loading /sbin/init.lua with mode bt
+[00001.6] OpenRC 2.0.0-pre1 starting up Open Kernel 2.0.0-rc1
+[00001.6] init: Reading configuration from /etc/inittab
+[0001.65] init: loading libmanager
+[0001.65] loadfile: loading /lib/modules/libraries.lua with mode bt
+[00001.7] init: loading events
+[00001.7] loadfile: loading /lib/modules/events.lua with mode bt
+[0001.75] table: 0x7f7d702b9990
+[0001.75] init: loading input
+[00001.8] loadfile: loading /lib/modules/input.lua with mode bt
+[00001.8] table: 0x7f7d84050360
+[0001.85] init: loading components
+[0001.85] loadfile: loading /lib/modules/components.lua with mode bt
+[00001.9] table: 0x7f7d700e0620
+[00001.9] components: creating proxy: type disk_drive, address aa1316ad-2b6e-4ccf-a30f-2d9250e555ef
+[00001.9] components: creating proxy: type eeprom, address 27713bcf-af6e-4503-83b3-08303fdef5cb
+[0001.95] components: creating proxy: type internet, address 8b8a1631-7b53-4ee7-80a0-4da3c54e4730
+[0001.95] components: creating proxy: type data, address 101cc43c-552a-4a40-b187-291697af57fa
+[0001.95] init: loading users
+[00002.0] loadfile: loading /lib/modules/users.lua with mode bt
+[00002.0] table: 0x7f7d8404f9d0
+[0002.05] users: Reading /etc/passwd
+[0002.05] init: Initializing cooperative scheduler
+[00002.1] table: 0x7f7d84050360
+[00002.1] loadfile: loading /bin/login.lua with mode bt
+[0002.15] scheduler: Spawning task 1 with ID /bin/login.lua
+[00002.4] table: 0x7f7d7000a160
+[0005.35] users: Attempting login as root
+[00009.0] loadfile: loading /bin/sh.lua with mode bt
+[0009.05] scheduler: Spawning task 2 with ID shell
+[0009.05] scheduler: Killing task /bin/login.lua (PID 1)
+[0009.05] table: 0x7f7d7000a160
+[0009.05] sh: reading config
+[0010.15] loadfile: loading /bin/ps.lua with mode bt
+[00233.7] loadfile: loading /bin/ls.lua with mode bt
+[0239.05] loadfile: loading /bin/ls.lua with mode bt
+[0271.15] loadfile: loading /bin/ls.lua with mode bt
+[00288.7] loadfile: loading /bin/ls.lua with mode bt
+[0302.75] loadfile: loading /bin/ls.lua with mode bt
+[0387.75] loadfile: loading /bin/cd.lua with mode bt
+[0399.45] loadfile: loading /bin/cd.lua with mode bt
+[00401.2] loadfile: loading /bin/ls.lua with mode bt
+[0409.75] loadfile: loading /bin/cd.lua with mode bt
+[00432.3] loadfile: loading /bin/cd.lua with mode bt
+[00513.8] loadfile: loading /sbin/reboot.lua with mode bt
+[00513.8] table: 0x7f7d702b9990
+[0513.85] Shutting down

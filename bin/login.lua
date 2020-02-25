@@ -1,5 +1,7 @@
 -- Login screen --
 
+local users = require("users")
+
 while true do
   write("login: ")
   local name = read()
@@ -9,9 +11,11 @@ while true do
   else
     local ok, err = loadfile("/bin/sh.lua")
     if not ok then
-      error(err)
+      kernel.log(err)
     else
       os.spawn(ok, "shell")
+      os.kill(os.pid())
     end
   end
+  coroutine.yield()
 end
