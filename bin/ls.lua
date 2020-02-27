@@ -43,7 +43,7 @@ if #args > 0 then
     end
   end
 else
-  local files = fs.list(shell.pwd())
+  local files = fs.list(shell.pwd()) or {}
 
   table.sort(files)
 

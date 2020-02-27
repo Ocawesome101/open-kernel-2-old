@@ -179,9 +179,16 @@ end
 
 kernel.log("Initializing filesystems")
 
+bootfs.remove("/mnt")
+
 _G.fs = {}
 
-local mounts = {["/"] = bootfs}
+local mounts = {
+  {
+    path = "/",
+    proxy = bootfs
+  }
+}
 
 kernel.log("Stage 1: helpers")
 local function cleanPath(p)
@@ -198,20 +205,17 @@ end
 
 local function resolve(path) -- Resolve a path to a filesystem proxy
   checkArg(1, path, "string")
-  kernel.log("checking " .. path)
   local proxy
-  if path == "/" then
-    return "/", bootfs
-  end
   local path = cleanPath(path)
-  for p,cp in pairs(mounts) do
-    if path:sub(1, #p) == p then
-      path = path:sub(#p + 1)
-      proxy = cp
+  for i=1, #mounts, 1 do
+    local pathSeg = cleanPath(path:sub(1, #mounts[i].path))
+    if pathSeg == mounts[i].path then
+      path = cleanPath(path:sub(#mounts[i].path + 1))
+      proxy = mounts[i].proxy
     end
   end
   if proxy then
-    return cleanPath(path), proxy
+     return cleanPath(path), proxy
   end
 end
 
@@ -219,44 +223,44 @@ kernel.log("Stage 2: mounting, unmounting")
 function fs.mount(addr, path)
   checkArg(1, addr, "string")
   checkArg(2, path, "string", "nil")
-  local path = path or "/mnt/" .. addr:sub(1, 6)
+  local path = path or "/mnt/" .. (component.invoke(addr, "getLabel") or addr:sub(1, 6))
   path = cleanPath(path)
   local p, pr = resolve(path)
-  if p and pr and p ~= path:sub(2) then -- If we didn't just get the beginning / stripped
-    return false, "Sub-mounts are not yet supported"
-  end
-  if mounts[path] then
-    if mounts[path].address == addr then
-      return true
-    else
-      return false, "Cannot overwrite an existing mount"
-    end
-  else
-    if component.type(addr) == "filesystem" then
-      kernel.log("Mounting " .. addr .. " on " .. path)
-      if fs.makeDirectory then
-        fs.makeDirectory(path)
+  for _, data in pairs(mounts) do
+    if data.path == path then
+      if data.proxy.address == addr then
+        return true, "Filesystem already mounted"
       else
-        bootfs.makeDirectory(path)
+        return false, "Cannot override mounts"
       end
-      mounts[path] = component.proxy(addr)
     end
   end
+  if component.type(addr) == "filesystem" then
+    kernel.log("Mounting " .. addr .. " on " .. path)
+    if fs.makeDirectory then
+      fs.makeDirectory(path)
+    else
+      bootfs.makeDirectory(path)
+    end
+    mounts[#mounts + 1] = {path = path, proxy = component.proxy(addr)}
+    return true
+  end
+  kernel.log("Failed mounting " .. addr .. " on " .. path)
   return false, "Unable to mount"
 end
 
 function fs.unmount(path)
   checkArg(1, path, "string")
   for k, v in pairs(mounts) do
-    if v == path then
+    if v.path == path then
       kernel.log("Unmounting filesystem " .. path)
       mounts[k] = nil
-      fs.remove(k)
+      fs.remove(v.path)
       return true
-    elseif k == path then
+    elseif v.proxy.address == path then
       kernel.log("Unmounting filesystem " .. v)
       mounts[k] = nil
-      fs.remove(k)
+      fs.remove(v.path)
     end
   end
   return false, "No such mount"
@@ -265,7 +269,7 @@ end
 function fs.mounts()
   local rtn = {}
   for k,v in pairs(mounts) do
-    rtn[k] = v.address
+    rtn[k] = {path = v.path, address = v.proxy.address}
   end
   return rtn
 end
@@ -293,7 +297,7 @@ function fs.open(file, mode)
   end
   kernel.log("Opening file " .. file .. " with mode " .. mode)
   local path, proxy = resolve(file)
-  local handle, err = proxy.open(file, mode)
+  local handle, err = proxy.open(path, mode)
   if not handle then
     return false, err
   end
@@ -374,7 +378,7 @@ function fs.isDirectory(path)
   checkArg(1, path, "string")
   local path, proxy = resolve(path)
 
-  return proxy.isDirectory()
+  return proxy.isDirectory(path)
 end
 
 function fs.rename(source, dest)
@@ -543,7 +547,8 @@ function table.iter(tbl) -- Iterate over the items in a table
   local i = 1
   return setmetatable(tbl, {__call = function()
     if tbl[i] then
-      return tbl[i]
+      i = i + 1
+      return tbl[i - 1]
     else
       return nil
     end

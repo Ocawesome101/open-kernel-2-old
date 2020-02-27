@@ -1,10 +1,12 @@
 -- rm: delete a file or directory --
 
-local args, options = {...}
+local args, options = shell.parse(...)
 
 local force = options.f or options.force or false
 local ask = options.i or false
 local verbose = options.v or options.verbose or false
+
+local event = require("event")
 
 if #args < 1 then
   return print("usage: rm FILE1 FILE2 ...")

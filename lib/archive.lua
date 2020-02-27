@@ -2,17 +2,19 @@
 
 local acv = {}
 
+local DESTFILE = ""
+
 local function getData(line)
   checkArg(1, line, "string")
   local data = {false, nil, nil} -- isDefinition, type, path. All paths are treated as relative.
-  if line:sub(1, 9) == "--ACVDATA" then
+  if line:sub(1, 9) == "::ACVDATA" then
     data[1] = true
-    if line:sub(10, 23) == " type=DIR,path=" then
+    if line:sub(11, 24) == "type=DIR,path=" then
       data[2] = "directory"
-      data[3] = line:sub(24)
-    elseif line:sub(9,24) == " type=FILE,path=" then
-      data[2] = "file"
       data[3] = line:sub(25)
+    elseif line:sub(11,25) == "type=FILE,path=" then
+      data[2] = "file"
+      data[3] = line:sub(26)
     end
   end
   return data, line
@@ -36,26 +38,39 @@ function acv.unpack(file, dest)
         outhandle:write(text .. "\n")
       end
     else
+      print("Extracting " .. linedata[3])
       if linedata[2] == "directory" then
-	fs.makeDirectory(dest .. "/" .. linedata[3])
+        fs.makeDirectory(dest .. "/" .. linedata[3])
       else
-	if outhandle then outhandle:close() end
-	outhandle = fs.open(dest .. "/" .. linedata[3], "w")
+        if outhandle then outhandle:close() end
+        outhandle = fs.open(dest .. "/" .. linedata[3], "w")
       end
     end
   end
 end
 
-local function writeData(dir, out, recursed, rdir)
-  for file in table.iter(fs.list(dir)) do
-    if fs.isDirectory(dir .. "/" .. (recursed and rdir .. "/" or "") .. file) then
-      out:write("--ACVDATA type=DIR,path=" .. (recursed and rdir .. "/" or "") .. file) -- This line is cursed
-      writeData(dir, out, true, (recursed and rdir .. "/" or "") .. file)
-    else
-      out:write("--ACVDATA type=FILE,path=" .. (recursed and rdir .. "/" or "") .. file) -- This one too
-      local h = fs.open(dir .. "/" .. (recursed and rdir .. "/" or "") .. file) -- Did I mention this line is really cursed?
-      out:write(h:readAll() or "")
-      h:close()
+local archived = {}
+
+local function writeData(dir, out, recurse)
+  local recurse = recurse or ""
+  local absolutePath = fs.clean(dir .. "/" .. recurse)
+  print("Contents of " .. absolutePath)
+  local files = fs.list(absolutePath)
+  if not files then return end
+  for file in table.iter(files) do
+    local acvfile = fs.clean(absolutePath .. "/" .. file)
+    if acvfile ~= DESTFILE and not archived[acvfile] then -- Prevent recursion and double-archiving
+      print("Archiving " .. acvfile)
+      archived[acvfile] = true
+      if fs.isDirectory(acvfile) then
+        out:write("::ACVDATA type=DIR,path=" .. fs.clean(recurse .. "/" .. file) .. "\n")
+        writeData(dir, out, recurse .. "/" .. file)
+      else
+        local h, e = fs.open(acvfile)
+        if not h then print(e)
+        else out:write("::ACVDATA type=FILE,path=" .. fs.clean(recurse .. "/" .. file) .. "\n") out:write(h:readAll() .. "\n") h:close()
+        end
+      end
     end
   end
 end
@@ -66,8 +81,9 @@ function acv.pack(dir, dest)
   if not fs.exists(dir) then
     return false, dir .. ": No such file or directory"
   end
-  local output = fs.open(dest, "w")
-  writeData(dir, output, false, nil)
+  DESTFILE = fs.clean(dest)
+  local output, err = fs.open(dest, "w")
+  writeData(dir, output)
   output:close()
   return true
 end

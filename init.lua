@@ -1,6 +1,6 @@
 -- This script just loads the kernel. That's all it does. You can go now. --
 
--- Only edit this line! --
+-- Only edit this table! --
 local flags = {
   init = "/sbin/init.lua",
   runlevel = 2, -- Runlevel the system should attempt to reach

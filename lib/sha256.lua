@@ -6,9 +6,9 @@ local component = require("component")
 local sha = {}
 
 local shamode = "software"
-if require("data") and not component.list("ocemu")() and not component.list("sandbox")() then
-  shamode = "hardware"
-end
+--if require("data") and not component.list("ocemu")() and not component.list("sandbox")() then
+--  shamode = "hardware"
+--end
 
 if shamode == "hardware" then
   datac = require("data")

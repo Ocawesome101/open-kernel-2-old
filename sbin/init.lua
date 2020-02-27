@@ -46,14 +46,20 @@ end
 
 kernel.log("init: Initializing cooperative scheduler")
 do
-  local tasks = {}
-  local pid = 1
-  local currentpid = 0
+  local tasks = {
+    [1] = {
+      coro = nil,
+      id = "/sbin/init.lua",
+      pid = 1,
+      parent = 1
+    }
+  }
+  local pid = 2
+  local currentpid = 1
   local timeout = 0.25
   local event = require("event")
 
-  function os.spawn(func, name
-  )
+  function os.spawn(func, name)
     checkArg(1, func, "function")
     checkArg(2, name, "string")
     kernel.log("scheduler: Spawning task " .. tostring(pid) .. " with ID " .. name)
@@ -89,9 +95,6 @@ do
   function os.info(pid)
     checkArg(1, pid, "number", "nil")
     local pid = pid or os.pid()
-    if pid == 0 then -- Asking for info on init process
-      return {name = "/sbin/init.lua", parent = 0, pid = 0}
-    end
     if not tasks[pid] then return false, "No such process" end
     return {name = tasks[pid].id, parent = tasks[pid].parent, pid = tasks[pid].pid}
   end
@@ -101,13 +104,14 @@ do
     while #tasks > 0 do
       local eventData = {event.pull(nil, timeout)}
       for k, v in pairs(tasks) do
-        if coroutine.status(v.coro) ~= "dead" then
+        if v.coro and coroutine.status(v.coro) ~= "dead" then
           currentpid = k
+	  kernel.log("Current: " .. tostring(k))
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
           if not ok and err then
             kernel.log("Task " .. v.id .. " (PID " .. tostring(k) .. "): " .. tostring(ok) .. " " .. tostring(err))
           end
-        else
+        elseif v.coro then
           kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died")
           tasks[k] = nil
         end
