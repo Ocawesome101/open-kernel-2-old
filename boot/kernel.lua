@@ -6,6 +6,7 @@ local bootAddress = computer.getBootAddress()
 
 local filesystems = {}
 local bootfs = component.proxy(bootAddress)
+local init = flags.init or "/sbin/init.lua"
 
 -- component proxies
 for addr, ctype in component.list() do
@@ -172,7 +173,7 @@ function _G.error(err, level)
       end
     end
   else
-    return native_error(err, level)
+    return native_error(err, level or 2)
   end
 end
 
@@ -189,11 +190,15 @@ local function cleanPath(p)
   for segment in p:gmatch("[^%/]+") do
     path = path .. "/" .. (segment or "")
   end
+  if path == "" then
+    path = "/"
+  end
   return path
 end
 
 local function resolve(path) -- Resolve a path to a filesystem proxy
   checkArg(1, path, "string")
+  kernel.log("checking " .. path)
   local proxy
   if path == "/" then
     return "/", bootfs
@@ -207,8 +212,6 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   end
   if proxy then
     return cleanPath(path), proxy
-  else
-    return false, "No filesystems mounted"
   end
 end
 
@@ -270,24 +273,25 @@ end
 kernel.log("Stage 3: standard FS API")
 function fs.exists(path)
   checkArg(1, path, "string")
-  local path, proxy = resolve(path)
-  if proxy.exists(path) then
-    return true
-  else
+  local path, proxy = resolve(cleanPath(path))
+  if not proxy.exists(path) then
     return false
+  else
+    return true
   end
 end
 
-function fs.open(file)
+function fs.open(file, mode)
   checkArg(1, file, "string")
   checkArg(2, mode, "string", "nil")
-  if not fs.exists(file) then
-    return false, "File not found"
+  if not fs.exists(file) and (mode == "r" or not mode) then
+    return false, "No such file or directory"
   end
   local mode = mode or "r"
   if mode ~= "r" and mode ~= "rw" and mode ~= "w" then
     return false, "Unsupported mode"
   end
+  kernel.log("Opening file " .. file .. " with mode " .. mode)
   local path, proxy = resolve(file)
   local handle, err = proxy.open(file, mode)
   if not handle then
@@ -510,6 +514,42 @@ function table.copy(tbl)
   return rtn
 end
 
+kernel.log("util: table.serialize")
+function table.serialize(tbl) -- Readability is not a strong suit of this function's output.
+  checkArg(1, tbl, "table")
+  local rtn = "{"
+  for k, v in pairs(tbl) do
+    if type(k) == "string" then
+      rtn = rtn .. "[\"" .. k .. "\"] = "
+    else
+      rtn = rtn .. "[" .. tostring(k) .. "] = "
+    end
+    if type(v) == "table" then
+      rtn = rtn .. table.serialize(v)
+    elseif type(v) == "string" then
+      rtn = rtn .. "\"" .. tostring(v) .. "\""
+    else
+      rtn = rtn .. tostring(v)
+    end
+    rtn = rtn .. ","
+  end
+  rtn = rtn .. "}"
+  return rtn
+end
+
+kernel.log("util: table.iter")
+function table.iter(tbl) -- Iterate over the items in a table
+  checkArg(1, tbl, "table")
+  local i = 1
+  return setmetatable(tbl, {__call = function()
+    if tbl[i] then
+      return tbl[i]
+    else
+      return nil
+    end
+  end})
+end
+
 kernel.log("util: string.tokenize")
 function string.tokenize(sep, ...)
   checkArg(1, sep, "string")
@@ -545,8 +585,8 @@ function fs.clean(path)
   return cleanPath(path)
 end
 
-kernel.log("Loading /sbin/init.lua")
-local ok, err = loadfile("/sbin/init.lua")
+kernel.log("Loading init: " .. init)
+local ok, err = loadfile(init)
 if not ok then
   error(err, -1)
 end

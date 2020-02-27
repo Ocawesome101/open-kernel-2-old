@@ -5,17 +5,14 @@ local users = {}
 local user = "root"
 local uid = 0
 
-local data = require("data")
-if not data then
-  error("users: Data card required!", -1)
+local unicode = require("unicode")
+local sha, e = require("sha256")
+kernel.log(tostring(sha) .. " " .. tostring(e))
+if e then
+  error(e, -1)
 end
 
-local passwd = {
-  ["root"] = {
-    uid = 0,
-    pass = "^¿Z­õúŠù¯h€­e~×P°ý±-Ç@FÇ+ ¯¬" -- Good luck guessing this!
-  }
-}
+local passwd = {}
 
 kernel.log("users: Reading /etc/passwd")
 local handle, err = fs.open("/etc/passwd")
@@ -27,10 +24,12 @@ else
   local ok, err = load("return " .. data, "=users.parse-passwd", "bt", _G)
   if not ok then
     kernel.log("users: Failed to parse /etc/passwd: " .. err)
+    kernel.log("users: WARNING: you may now be able to log in to your system until /etc/passwd is fixed!")
   else
     local s, r = pcall(ok)
     if not s then
       kernel.log("users: Failed to parse /etc/passwd: " .. r)
+      kernel.log("users: WARNING: you may not be able to log in to your system until /etc/passwd is fixed!")
     else
       passwd = r
     end
@@ -39,16 +38,25 @@ end
 
 local users = {}
 
+local function encrypt(str, salt)
+  local result = sha.sha256(str .. salt)
+  for i=1, 64, 1 do
+    result = sha.sha256(result .. salt)
+  end
+  return result
+end
+
 function users.login(name)
   if not passwd[name] then
     return false, "No such user"
   end
   kernel.log("users: Attempting login as " .. name)
   local tries = 3
+  local salt = passwd[name].salt
   while tries > 0 do
     write("password: ")
     local password = read("")
-    local password = data.sha256(password)
+    local password = encrypt(password, salt or "")
     if passwd[name].pass == password then
       user = name
       uid = passwd[name].uid
@@ -57,6 +65,9 @@ function users.login(name)
       tries = tries - 1
     end
   end
+  kernel.log("users: maximum login attempts exceeded")
+  print("Login failed.")
+  return false
 end
 
 function users.user()
@@ -68,11 +79,99 @@ function users.uid()
 end
 
 function users.home()
-  if user ~= "root" and uid ~= 0 then
+  if user ~= "root" or uid ~= 0 then
     return "/home/" .. user
   else
     return "/root"
   end
+end
+
+function users.adduser(name)
+  checkArg(1, name, "string")
+  if passwd[name] then
+    return false, "User already exists"
+  end
+  kernel.log("users: adding user " .. name)
+  local password = ""
+  repeat
+    write("password: ")
+    password = read("")
+  until password ~= ""
+  local salt = ""
+  for i=1, 64, 1 do
+    salt = salt .. unicode.char(math.random(32, 0x28FF))
+  end
+  password = encrypt(password, salt)
+  local u = 0
+  for k, v in pairs(passwd) do
+    if v.uid > u then
+      u = v.uid
+    end
+  end
+--  local tsalt = salt:gsub(".", function(a)return string.format("%02x", string.byte(a))end)
+  passwd[name] = {
+    uid = u + 1,
+    pass = password,
+    salt = salt
+  }
+  kernel.log("users: saving /etc/passwd")
+  local str = table.serialize(passwd)
+  local handle = fs.open("/etc/passwd", "w")
+  handle:write(str)
+  handle:close()
+  return true
+end
+
+function users.deluser(name)
+  checkArg(1, name, "string")
+  if name == "root" then
+    return false, "Cannot remove the root user"
+  end
+  if not passwd[name] then
+    return false, "No such user"
+  end
+  kernel.log("users: removing user " .. name)
+  kernel.log("users: authenticating removal")
+  if uid ~= 0 or user ~= "root" then -- You aren't root, we need the password of the user you're deleting
+    local tries = 3
+    while tries > 0 do
+      write("password: ")
+      local password = read()
+      password = encrypt(password, passwd[name].salt)
+      if password == passwd[mame].password then
+	break
+      end
+      tries = tries - 1
+    end
+    if tries == 0 then
+      print("Authentication failed.")
+      kernel.log("users: authentication failed")
+      return false, "User authentication failed"
+    end
+  else -- You are root, but we still need your password just to be safe
+    local tries = 3
+    while tries < 0 do
+      write("password: ")
+      local password = read()
+      password = encrypt(password, passwd["root"].salt)
+      if password == passwd[name].password then
+	break
+      end
+      tries = tries - 1
+    end
+    if tries == 0 then
+      print("Authentication failed.")
+      kernel.log("users: authentication failed")
+      return false, "Authentication failed"
+    end
+  end
+  kernel.log("users: saving /etc/passwd")
+  passwd[name] = nil
+  local data = table.serialize(passwd)
+  local handle = fs.open("/etc/passwd", "w")
+  handle:write(data)
+  handle:close()
+  return true, "User removed"
 end
 
 lib.loaded["users"] = users

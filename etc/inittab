@@ -23,5 +23,9 @@
     }
   },
   daemons = { -- Background services, loaded after multitasking is initialized
+    [1] = {
+      id = "idled",
+      file = "/lib/services/idled.lua"
+    }
   }
 }

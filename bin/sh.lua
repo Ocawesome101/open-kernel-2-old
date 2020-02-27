@@ -45,7 +45,7 @@ function shell.setPwd(dir)
     PWD = dir
     return true
   else
-    return false, "No such file or directory"
+    return false, dir .. ": No such file or directory"
   end
 end
 
@@ -70,7 +70,9 @@ function shell.parse(...)
       if input[i]:sub(1, 2) == "--" then
         options[input[i]:sub(3)] = true
       else
-        options[input[i]:sub(2,2)] = true
+	for c in input[i]:sub(2):gmatch(".") do
+          options[c] = true
+	end
       end
     else
       args:insert(input[i])
@@ -79,8 +81,9 @@ function shell.parse(...)
   return args, options
 end
 
-function shell.exec(...) -- It is probably best to call this with pcall, considering the liberal use of error().
-  local exec = string.tokenize(" ", ...)
+function shell.exec(cmd, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
+  checkArg(1, cmd, "string")
+  local exec = string.tokenize(" ", cmd, ...)
   local cmd = exec[1]
   local cmdPath = ""
   local function check(p)
@@ -95,7 +98,7 @@ function shell.exec(...) -- It is probably best to call this with pcall, conside
     check(cmd .. ".lua")
   end
   if cmdPath == "" then
-    return error("Command not found")
+    return print("sh: " .. cmd .. ": command not found")
   end
   local ok, err = loadfile(cmdPath)
   if not ok then
@@ -140,10 +143,11 @@ local function printError(...)
   gpu.setForeground(old)
 end
 
+coroutine.yield()
 while true do
   prompt()
   local command = read()
-  if command then
+  if command and command ~= "" then
     local s,r = pcall(function()shell.exec(command)end)
     if not s then printError(r) end
   end
