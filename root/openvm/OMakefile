@@ -1,0 +1,27 @@
+{
+  ["lib/sandbox"] = {
+    ["exec"] = {
+      "luac src/lib/sandbox.lua"
+    }
+  },
+  ["openvm"] = {
+    ["deps"] = {
+      "lib/sandbox",
+    },
+    ["exec"] = {
+      "luac src/openvm.lua"
+    }
+  },
+  ["pkg"] = {
+    ["exec"] = {
+      "mkdir pkg/bin",
+      "mv openvm.lua pkg/bin/openvm.lua",
+      "makepkg --all pkg/ openvm openvm"
+    }
+  },
+  ["all"] = {
+    ["deps"] = {
+      "openvm"
+    }
+  }
+}
