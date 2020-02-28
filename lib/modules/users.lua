@@ -55,7 +55,7 @@ function users.login(name)
   local salt = passwd[name].salt
   while tries > 0 do
     write("password: ")
-    local password = read("")
+    local password = read("*")
     local password = encrypt(password, salt or "")
     if passwd[name].pass == password then
       user = name
@@ -95,7 +95,7 @@ function users.adduser(name)
   local password = ""
   repeat
     write("password: ")
-    password = read("")
+    password = read("*")
   until password ~= ""
   local salt = ""
   for i=1, 64, 1 do
@@ -136,7 +136,7 @@ function users.deluser(name)
     local tries = 3
     while tries > 0 do
       write("password: ")
-      local password = read()
+      local password = read("*")
       password = encrypt(password, passwd[name].salt)
       if password == passwd[mame].password then
 	break
@@ -152,7 +152,7 @@ function users.deluser(name)
     local tries = 3
     while tries < 0 do
       write("password: ")
-      local password = read()
+      local password = read("*")
       password = encrypt(password, passwd["root"].salt)
       if password == passwd[name].password then
 	break

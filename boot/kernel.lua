@@ -288,7 +288,7 @@ end
 function fs.open(file, mode)
   checkArg(1, file, "string")
   checkArg(2, mode, "string", "nil")
-  if not fs.exists(file) and (mode == "r" or not mode) then
+  if not fs.exists(file) and mode ~= "w"  then
     return false, "No such file or directory"
   end
   local mode = mode or "r"

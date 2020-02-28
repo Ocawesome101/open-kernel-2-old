@@ -6,18 +6,35 @@ _G.shell = {}
 
 shell._VERSION = "Open Shell 2.0.0-pre2"
 
-local PWD = users.home()
-local PS1 = "\\w\\$ "
+local env = {
+  HOME = users.home(),
+  PWD = users.home(),
+  USER = users.user(),
+  UID = users.uid(),
+  PS1 = "\\w\\$ ",
+  PATH = "/bin:/sbin:/usr/bin"
+}
+
+function os.getenv(var)
+  checkArg(1, var, "string")
+  return env[var]
+end
+
+function os.setenv(var, val)
+  checkArg(1, var, "string")
+  checkArg(1, val, "string")
+  env[var] = val
+end
+
 local colors = { -- How to color escape sequences
   ["w"] = 0x55FF55,
   ["$"] = 0x00ACFF
 }
-local PATH = "/bin:/sbin:/usr/bin"
 
 local config = {}
 
 kernel.log("sh: reading config")
-local handle, err = fs.open(PWD .. "/.shconfig")
+local handle, err = fs.open(os.getenv("PWD") .. "/.shconfig")
 if handle then
   local data = handle:readAll()
   handle:close()
@@ -31,19 +48,21 @@ if handle then
   end
 end
 
-if not fs.exists(PWD) then
-  fs.makeDirectory(PWD)
+if not fs.exists(env.PWD) then
+  fs.makeDirectory(env.PWD)
 end
 
 function shell.pwd()
-  return PWD
+  return env.PWD
 end
 
 function shell.setPwd(dir)
   checkArg(1, dir, "string")
-  if fs.exists(dir) then
-    PWD = dir
+  if fs.exists(dir) and fs.isDirectory(dir) then
+    env.PWD = fs.clean(dir)
     return true
+  elseif fs.exists(dir) then
+    return false, dir .. ": Not a directory"
   else
     return false, dir .. ": No such file or directory"
   end
@@ -54,10 +73,10 @@ function shell.resolvePath(path)
   if path:sub(1, 1) == "/" then
     return path
   else
-    if path:find("..") then -- This is not yet supported
-      return PWD
+    if path:find("%.%.") then -- This is not yet supported
+      return os.getenv("PWD")
     else
-      return fs.clean(PWD .. "/" .. path)
+      return fs.clean(os.getenv("PWD") .. "/" .. path)
     end
   end
 end
@@ -91,7 +110,7 @@ function shell.exec(cmd, ...) -- It is probably best to call this with pcall, co
       cmdPath = p
     end
   end
-  for path in string.tokenize(":", PATH) do
+  for path in string.tokenize(":", env.PATH) do
     check(path .. "/" .. cmd .. ".lua")
     check(path .. "/" .. cmd)
     check(cmd)
@@ -113,6 +132,7 @@ end
 local function prompt()
   local p = ""
   local inEsc = false
+  local PS1 = env.PS1
   for char in PS1:gmatch(".") do
     if char == "\\" then
       inEsc = (not inEsc)
@@ -123,9 +143,9 @@ local function prompt()
       if inEsc then
         gpu.setForeground(colors[char] or 0xFFFFFF)
         if char == "w" then
-          write(PWD)
+          write(env.PWD)
         elseif char == "$" then
-          write(users.uid() == 0 and "#" or "$")
+          write(env.UID == 0 and "#" or "$")
         end
         inEsc = false
       else
@@ -144,12 +164,20 @@ local function printError(...)
 end
 
 coroutine.yield()
+local history = table.new()
 while true do
   prompt()
-  local command = read()
+  local command = read(nil, history)
   if command and command ~= "" then
-    local s,r = pcall(function()shell.exec(command)end)
-    if not s then printError(r) end
+    history:insert(command)
+    if #history > 16 then
+      history:remove(1)
+    end
+    for cmd in string.tokenize(";", command) do
+      gpu.setForeground(colors["char"] or 0xFFFFFF)
+      local s,r = pcall(function()shell.exec(cmd)end)
+      if not s then printError(r) end
+    end
   end
   coroutine.yield()
 end
