@@ -5,7 +5,7 @@ local cfg = {}
 function cfg.load(file)
   checkArg(1, file, "string")
   print("config: loading " .. file)
-  local handle, err = fs.open(file, "r")
+  local handle, err = io.open(file, "r")
   if not handle then
     return false, err
   end
@@ -27,7 +27,7 @@ end
 function cfg.save(config, file)
   checkArg(1, config, "table")
   checkArg(2, file, "string")
-  local handle, err = fs.open(file, "w")
+  local handle, err = io.open(file, "w")
   if not handle then return false, err, print(err) end
   handle:write(table.serialize(config))
   handle:close()

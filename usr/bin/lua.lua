@@ -16,7 +16,7 @@ print(_VERSION)
 local history = table.new()
 while not exit do
   gpu.setForeground(0xFFFF00)
-  write("lua> ")
+  io.write("lua> ")
   local inp = read(nil, history)
   history:insert(inp)
   if #history > 16 then

@@ -14,10 +14,14 @@
       file = "/lib/modules/input.lua"
     },
     [4] = {
+      id = "io",
+      file = "/lib/modules/io.lua"
+    },
+    [5] = {
       id = "components",
       file = "/lib/modules/components.lua"
     },
-    [5] = {
+    [6] = {
       id = "users",
       file = "/lib/modules/users.lua"
     }

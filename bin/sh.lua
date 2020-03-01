@@ -143,14 +143,14 @@ local function prompt()
       if inEsc then
         gpu.setForeground(colors[char] or 0xFFFFFF)
         if char == "w" then
-          write(env.PWD)
+          io.write(env.PWD)
         elseif char == "$" then
-          write(env.UID == 0 and "#" or "$")
+          io.write(env.UID == 0 and "#" or "$")
         end
         inEsc = false
       else
         gpu.setForeground(colors["char"] or 0xFFFFFF)
-        write(char)
+        io.write(char)
       end
     end
   end

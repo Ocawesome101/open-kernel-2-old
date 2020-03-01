@@ -22,8 +22,12 @@ if not handle then
   error("Failed to load init configuration: " .. err)
 end
 
-local data = handle:readAll()
-handle:close()
+local data = ""
+repeat
+  local d = handle.read(math.huge)
+  data = data .. (d or "")
+until not d
+handle.close()
 
 local ok, err = load("return " .. data, "=openrc.parse-config", "bt", _G)
 if not ok then

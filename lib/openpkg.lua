@@ -63,11 +63,11 @@ function pkg.installPackage(file)
       else
         print("Overwriting. Note that some programs may not function correctly.")
         packages[name].files:insert(dest)
-        local inhandle, err = fs.open(src)
+        local inhandle, err = io.open(src)
         if not inhandle then
           print("WARNING: " .. err)
         else
-          local outhandle = fs.open(dest, "w")
+          local outhandle = io.open(dest, "w")
           outhandle:write(inhandle:readAll())
           inhandle:close()
           outhandle:close()
@@ -75,11 +75,11 @@ function pkg.installPackage(file)
       end
     else
       packages[name].files:insert(dest)
-      local inhandle, err = fs.open(src)
+      local inhandle, err = io.open(src)
       if not inhandle then
         print("WARNING: " .. err)
       else
-        local outhandle = fs.open(dest, "w")
+        local outhandle = io.open(dest, "w")
         outhandle:write(inhandle:readAll())
         inhandle:close()
         outhandle:close()

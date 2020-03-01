@@ -24,7 +24,7 @@ function acv.unpack(file, dest)
   checkArg(1, file, "string")
   checkArg(2, dest, "string")
   fs.makeDirectory(dest)
-  local handle, err = fs.open(file)
+  local handle, err = io.open(file)
   if not handle then
     return false, err
   end
@@ -66,7 +66,7 @@ local function writeData(dir, out, recurse)
         out:write("::ACVDATA type=DIR,path=" .. fs.clean(recurse .. "/" .. file) .. "\n")
         writeData(dir, out, recurse .. "/" .. file)
       else
-        local h, e = fs.open(acvfile)
+        local h, e = io.open(acvfile)
         if not h then print(e)
         else out:write("::ACVDATA type=FILE,path=" .. fs.clean(recurse .. "/" .. file) .. "\n") out:write(h:readAll() .. "\n") h:close()
         end

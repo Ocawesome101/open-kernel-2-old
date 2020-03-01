@@ -6,34 +6,17 @@ local user = "root"
 local uid = 0
 
 local unicode = require("unicode")
+local config = require("config")
 local sha, e = require("sha256")
 kernel.log(tostring(sha) .. " " .. tostring(e))
 if e then
   error(e, -1)
 end
 
-local passwd = {}
-
 kernel.log("users: Reading /etc/passwd")
-local handle, err = fs.open("/etc/passwd")
-if not handle then
-  kernel.log("users: /etc/passwd: " .. err)
-else
-  local data = handle:readAll()
-  handle:close()
-  local ok, err = load("return " .. data, "=users.parse-passwd", "bt", _G)
-  if not ok then
-    kernel.log("users: Failed to parse /etc/passwd: " .. err)
-    kernel.log("users: WARNING: you may now be able to log in to your system until /etc/passwd is fixed!")
-  else
-    local s, r = pcall(ok)
-    if not s then
-      kernel.log("users: Failed to parse /etc/passwd: " .. r)
-      kernel.log("users: WARNING: you may not be able to log in to your system until /etc/passwd is fixed!")
-    else
-      passwd = r
-    end
-  end
+local passwd, err = config.load("/etc/passwd")
+if not passwd then
+  error(err)
 end
 
 local users = {}
@@ -54,7 +37,7 @@ function users.login(name)
   local tries = 3
   local salt = passwd[name].salt
   while tries > 0 do
-    write("password: ")
+    io.write("password: ")
     local password = read("*")
     local password = encrypt(password, salt or "")
     if passwd[name].pass == password then
@@ -94,7 +77,7 @@ function users.adduser(name)
   kernel.log("users: adding user " .. name)
   local password = ""
   repeat
-    write("password: ")
+    io.write("password: ")
     password = read("*")
   until password ~= ""
   local salt = ""
@@ -115,10 +98,7 @@ function users.adduser(name)
     salt = salt
   }
   kernel.log("users: saving /etc/passwd")
-  local str = table.serialize(passwd)
-  local handle = fs.open("/etc/passwd", "w")
-  handle:write(str)
-  handle:close()
+  config.save(passwd, "/etc/passwd")
   return true
 end
 
@@ -135,7 +115,7 @@ function users.deluser(name)
   if uid ~= 0 or user ~= "root" then -- You aren't root, we need the password of the user you're deleting
     local tries = 3
     while tries > 0 do
-      write("password: ")
+      io.write("password: ")
       local password = read("*")
       password = encrypt(password, passwd[name].salt)
       if password == passwd[mame].password then
@@ -151,7 +131,7 @@ function users.deluser(name)
   else -- You are root, but we still need your password just to be safe
     local tries = 3
     while tries < 0 do
-      write("password: ")
+      io.write("password: ")
       local password = read("*")
       password = encrypt(password, passwd["root"].salt)
       if password == passwd[name].password then
@@ -167,10 +147,7 @@ function users.deluser(name)
   end
   kernel.log("users: saving /etc/passwd")
   passwd[name] = nil
-  local data = table.serialize(passwd)
-  local handle = fs.open("/etc/passwd", "w")
-  handle:write(data)
-  handle:close()
+  config.save(passwd, "/etc/passwd")
   return true, "User removed"
 end
 

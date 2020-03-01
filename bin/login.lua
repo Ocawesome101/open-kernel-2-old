@@ -9,7 +9,7 @@ for _,t in pairs(os.tasks()) do
 end
 
 while true do
-  write("login: ")
+  io.write("login: ")
   local name = read()
   local ok, err = users.login(name)
   if not ok then

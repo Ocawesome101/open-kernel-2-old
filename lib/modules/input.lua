@@ -25,12 +25,12 @@ function _G.read(replace, history, default)
 
     local cx, cy = gpu.getCursorPos()
     gpu.setCursorPos(sx, cy)
-    write((" "):rep(w - sx))
+    io.write((" "):rep(w - sx))
     gpu.setCursorPos(sx, cy)
     if replace then
-      write(replace:rep(#str):sub(scroll + 1, w - sx - 1))
+      io.write(replace:rep(#str):sub(scroll + 1, w - sx - 1))
     else
-      write(str:sub(scroll + 1, (w - sx) - 1))
+      io.write(str:sub(scroll + 1, (w - sx) - 1))
     end
     if cursor then
       local oldc = gpu.get(cursorPos,cy)
@@ -117,6 +117,6 @@ function _G.read(replace, history, default)
       str = str .. p1
     end
   end
-  write("\n")
+  io.write("\n")
   return str
 end

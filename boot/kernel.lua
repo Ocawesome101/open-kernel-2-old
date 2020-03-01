@@ -157,7 +157,7 @@ local pullSignal = computer.pullSignal
 local shutdown = computer.shutdown
 function _G.error(err, level)
   if level == -1 or level == "__KPANIC__" then
-    verbose = true -- The user should see this
+    kernel.setlogs(true) -- The user should see this
     kernel.log(("="):rep(25))
     kernel.log("PANIC: " .. err)
     local traceback = debug.traceback(nil, 2)
@@ -297,40 +297,33 @@ function fs.open(file, mode)
   end
   kernel.log("Opening file " .. file .. " with mode " .. mode)
   local path, proxy = resolve(file)
-  local handle, err = proxy.open(path, mode)
-  if not handle then
+  local h, err = proxy.open(path, mode)
+  if not h then
     return false, err
   end
-  local returnHandle = {}
-  function returnHandle:close()
-    returnHandle = nil
-    return proxy.close(handle)
-  end
-  function returnHandle:rawHandle()
-    return handle
-  end
-  if mode == "r" or mode == "rw" then
-    function returnHandle:read(amount)
-      checkArg(1, amount, "number")
-      return proxy.read(handle, amount)
-    end
-    function returnHandle:readAll()
-      local buffer = ""
-      repeat
-        local data = proxy.read(handle, 0xFFFF)
-        buffer = buffer .. (data or "")
-      until not data
-      return buffer
+  local handle = {}
+  if mode == "r" or mode == "rw" or not mode then
+    handle.read = function(n)
+      return proxy.read(h, n)
     end
   end
   if mode == "w" or mode == "rw" then
-    function returnHandle:write(data)
-      checkArg(1, data, "string")
-      return proxy.write(handle, data)
+    handle.write = function(d)
+      return proxy.write(h, d)
     end
   end
-  return returnHandle
+  handle.close = function()
+    proxy.close(h)
+  end
+  handle.handle = function()
+    return h
+  end
+  return handle
 end
+
+fs.read = bootfs.read
+fs.write = bootfs.write
+fs.close = bootfs.close
 
 function fs.list(path)
   checkArg(1, path, "string")
@@ -400,11 +393,11 @@ function fs.rename(source, dest)
       return false, err
     end
     repeat
-      local data = s:read(0xFFFF)
+      local data = s.read(0xFFFF)
       d:write((data or ""))
     until not data
-    s:close()
-    d:close()
+    s.close()
+    d.close()
     sproxy.remove(spath)
   end
 end
@@ -460,10 +453,10 @@ if not handle then
 else
   local buffer = ""
   repeat
-    local data = handle:read(0xFFFF)
+    local data = handle.read(0xFFFF)
     buffer = buffer .. (data or "")
   until not data
-  handle:close()
+  handle.close()
 
   local ok, err = load("return " .. buffer, "=kernel.parse_fstab", "bt", _G)
   if not ok then
@@ -497,7 +490,13 @@ function _G.loadfile(file, mode, env)
     return false, err
   end
 
-  local data = handle:readAll()
+  local data = ""
+  repeat
+    local d = handle.read(math.huge)
+    data = data .. (d or "")
+  until not d
+
+  handle.close()
 
   return load(data, "=" .. file, mode, env)
 end
