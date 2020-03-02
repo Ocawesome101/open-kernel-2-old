@@ -208,10 +208,12 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   local proxy
   local path = cleanPath(path)
   for i=1, #mounts, 1 do
-    local pathSeg = cleanPath(path:sub(1, #mounts[i].path))
-    if pathSeg == mounts[i].path then
-      path = cleanPath(path:sub(#mounts[i].path + 1))
-      proxy = mounts[i].proxy
+    if mounts[i].path then
+      local pathSeg = cleanPath(path:sub(1, #mounts[i].path))
+      if pathSeg == mounts[i].path then
+        path = cleanPath(path:sub(#mounts[i].path + 1))
+        proxy = mounts[i].proxy
+      end
     end
   end
   if proxy then
@@ -219,11 +221,13 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   end
 end
 
+kernel.__component = component
+
 kernel.log("Stage 2: mounting, unmounting")
 function fs.mount(addr, path)
   checkArg(1, addr, "string")
   checkArg(2, path, "string", "nil")
-  local path = path or "/mnt/" .. (component.invoke(addr, "getLabel") or addr:sub(1, 6))
+  local path = path or "/mnt/" .. (kernel.__component.invoke(addr, "getLabel") or addr:sub(1, 6))
   path = cleanPath(path)
   local p, pr = resolve(path)
   for _, data in pairs(mounts) do
@@ -235,14 +239,14 @@ function fs.mount(addr, path)
       end
     end
   end
-  if component.type(addr) == "filesystem" then
+  if kernel.__component.type(addr) == "filesystem" then
     kernel.log("Mounting " .. addr .. " on " .. path)
     if fs.makeDirectory then
       fs.makeDirectory(path)
     else
       bootfs.makeDirectory(path)
     end
-    mounts[#mounts + 1] = {path = path, proxy = component.proxy(addr)}
+    mounts[#mounts + 1] = {path = path, proxy = kernel.__component.proxy(addr)}
     return true
   end
   kernel.log("Failed mounting " .. addr .. " on " .. path)
@@ -258,7 +262,7 @@ function fs.unmount(path)
       fs.remove(v.path)
       return true
     elseif v.proxy.address == path then
-      kernel.log("Unmounting filesystem " .. v)
+      kernel.log("Unmounting filesystem " .. v.proxy.address)
       mounts[k] = nil
       fs.remove(v.path)
     end
@@ -269,7 +273,7 @@ end
 function fs.mounts()
   local rtn = {}
   for k,v in pairs(mounts) do
-    rtn[k] = {path = v.path, address = v.proxy.address}
+    rtn[k] = {path = v.path, address = v.proxy.address, label = v.proxy.getLabel()}
   end
   return rtn
 end

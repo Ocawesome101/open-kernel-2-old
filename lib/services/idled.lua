@@ -4,6 +4,7 @@ local computer = require("computer")
 
 while true do
   if computer.runlevel() >= 2 then
+    kernel.log("idled: not needed in multi-user mode")
     os.kill(os.pid()) -- We aren't needed
   end
   coroutine.yield()

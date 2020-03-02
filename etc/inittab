@@ -2,26 +2,34 @@
 {
   startup = { -- APIs to load at startup
     [1] = {
+      id = "vcomponent",
+      file = "/lib/modules/vcomponent.lua"
+    },
+    [2] = {
       id = "libmanager",
       file = "/lib/modules/libraries.lua"
     },
-    [2] = {
+    [3] = {
       id = "events",
       file = "/lib/modules/events.lua"
     },
-    [3] = {
+    [4] = {
       id = "input",
       file = "/lib/modules/input.lua"
     },
-    [4] = {
+    [5] = {
       id = "io",
       file = "/lib/modules/io.lua"
     },
-    [5] = {
+    [6] = {
+      id = "devfs",
+      file = "/lib/modules/devfs.lua"
+    },
+    [7] = {
       id = "components",
       file = "/lib/modules/components.lua"
     },
-    [6] = {
+    [8] = {
       id = "users",
       file = "/lib/modules/users.lua"
     }
