@@ -5,6 +5,7 @@ local args, options = shell.parse(...)
 if #args < 2 then
   print("usage: label set PATH WORD1 WORD2 ...")
   print("   or: label get PATH")
+  print("   or: label clear PATH")
   return
 end
 
@@ -16,6 +17,8 @@ if op == "get" then
   return print("Label of " .. path .. " is \"" .. fs.getLabel(path) .. "\"")
 elseif op == "set" then
   return print("Label set to \"" .. fs.setLabel(label, path) .. "\"")
+elseif op == "clear" then
+  return print("Label cleared"), fs.setLabel("", path)
 else
   return print("label: Unrecognized argument " .. op)
 end

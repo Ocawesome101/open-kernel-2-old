@@ -3,6 +3,7 @@
 local flags = ... or {}
 
 local bootAddress = computer.getBootAddress()
+local startTime = computer.uptime()
 
 local filesystems = {}
 local bootfs = component.proxy(bootAddress)
@@ -106,7 +107,7 @@ end
 
 local uptime = computer.uptime
 local function time() -- Format the computer's uptime so we can print it nicely
-  local u = tostring(uptime()):sub(1, 7)
+  local u = tostring(uptime() - startTime):sub(1, 7)
   local c = u:find("%.") or 4
   if c == 7 then
     u = u:sub(2) .. "0"
@@ -208,7 +209,7 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   local proxy
   local path = cleanPath(path)
   for i=1, #mounts, 1 do
-    if mounts[i].path then
+    if mounts[i] and mounts[i].path then
       local pathSeg = cleanPath(path:sub(1, #mounts[i].path))
 --      kernel.log(pathSeg .. " =? " .. mounts[i].path)
       if pathSeg == mounts[i].path then

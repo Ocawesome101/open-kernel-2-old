@@ -136,6 +136,14 @@ function dfs.close(num)
   handles[num] = nil
 end
 
+function dfs.spaceTotal()
+  return 1024
+end
+
+function dfs.isReadOnly()
+  return true
+end
+
 function dfs.getLabel() return "devfs" end
 function dfs.setLabel() return true end
 

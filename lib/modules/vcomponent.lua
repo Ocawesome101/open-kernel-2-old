@@ -29,7 +29,7 @@ function component.list(ctype, match)
       matches[v.address] = v.type
     end
   end
-  local o = list(ctype, match) or {}
+  local o = list(ctype, match)
   local i = 1
   local a = {}
   for k,v in pairs(matches) do
@@ -41,6 +41,7 @@ function component.list(ctype, match)
   local function c()
     if a[i] then
       i = i + 1
+--      kernel.log(a[i - 1] .. " " .. (matches[a[i - 1]] or o[a[i - 1]]))
       return a[i - 1], (matches[a[i - 1]] or o[a[i - 1]])
     else
       return nil
@@ -51,7 +52,9 @@ end
 
 function component.invoke(addr, operation, ...)
   checkArg(1, addr, "string")
+  checkArg(2, operation, "string")
   if vcomponents[addr] then
+--    kernel.log("vcomponent: " .. addr .. " " .. operation)
     if vcomponents[addr][operation] then
       return vcomponents[addr][operation](...)
     end
