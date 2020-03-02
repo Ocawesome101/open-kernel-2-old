@@ -1,118 +1,144 @@
-[0.07206] Open Kernel 2.0.0-rc1 booting on Lua 5.2
-[0.07367] Total memory: 1024K
-[0.07418] Free memory: 932K
-[0.07466] Initializing filesystems
-[0.07534] Stage 1: helpers
-[0.07581] Stage 2: mounting, unmounting
-[0.07639] Stage 3: standard FS API
-[0.07755] Mounting f986e3c1-8da1-b21f-226b-303f32fe2cf8 on /tmp
-[0.07937] Reading /etc/fstab
-[0.08003] Failed to read fstab: No such file or directory
-[0.08101] Setting up utilities
-[0.08146] util: loadfile
-[0.08186] util: table.new
-[0.08222] util: table.copy
-[0.08257] util: table.serialize
-[0.08294] util: table.iter
-[0.08330] util: string.tokenize
-[0.08367] util: os.sleep
-[0.08401] util: fs.clean
-[0.08435] Loading init: /sbin/init.lua
-[0.08482] loadfile: loading /sbin/init.lua with mode bt
-[0.08569] Opening file /sbin/init.lua with mode r
-[0.08785] OpenRC 2.0.0-pre1 starting up Open Kernel 2.0.0-rc1
-[0.08878] init: Reading configuration from /etc/inittab
-[0.08957] Opening file /etc/inittab with mode r
-[0.09090] init: loading libmanager
-[0.09164] loadfile: loading /lib/modules/libraries.lua with mode bt
-[0.09265] Opening file /lib/modules/libraries.lua with mode r
-[0.09574] init: loading events
-[0.09653] loadfile: loading /lib/modules/events.lua with mode bt
-[0.09738] Opening file /lib/modules/events.lua with mode r
-[0.09880] libmanager: looking up module 'computer'
-[0.09949] init: loading input
-[0.09995] loadfile: loading /lib/modules/input.lua with mode bt
-[0.10081] Opening file /lib/modules/input.lua with mode r
-[0.10275] libmanager: looking up module 'event'
-[0.10344] init: loading io
-[0.10391] loadfile: loading /lib/modules/io.lua with mode bt
-[0.11060] Opening file /lib/modules/io.lua with mode r
-[0.11725] libmanager: looking up module 'buffer'
-[0.12302] loadfile: loading /lib/buffer.lua with mode bt
-[0.12889] Opening file /lib/buffer.lua with mode r
-[0.13628] libmanager: looking up module 'computer'
-[0.14531] init: loading components
-[0.15119] loadfile: loading /lib/modules/components.lua with mode bt
-[0.15700] Opening file /lib/modules/components.lua with mode r
-[0.16319] libmanager: looking up module 'component'
-[0.16926] components: creating proxy: type data, address 8f527f6e-daf0-3dfc-ffc7-26294f51f4ba
-[0.17555] components: creating proxy: type eeprom, address 7204e6ed-304d-916a-9d8e-4b7daf23eb27
-[0.18147] components: creating proxy: type internet, address 6bedf9ef-6246-9541-c47b-53408e5c2f7e
-[0.18740] components: creating proxy: type modem, address f0332300-df87-71cf-220f-892a2a882bcb
-[0.19348] init: loading users
-[0.20011] loadfile: loading /lib/modules/users.lua with mode bt
-[0.20594] Opening file /lib/modules/users.lua with mode r
-[0.21309] libmanager: looking up module 'unicode'
-[0.21854] libmanager: looking up module 'config'
-[0.22446] loadfile: loading /lib/config.lua with mode bt
-[0.23054] Opening file /lib/config.lua with mode r
-[0.23807] libmanager: looking up module 'sha256'
-[0.24441] loadfile: loading /lib/sha256.lua with mode bt
-[0.25015] Opening file /lib/sha256.lua with mode r
-[0.25913] libmanager: looking up module 'component'
-[0.26471] table: 0xaaaaf60bbbd0 nil
-[0.27026] users: Reading /etc/passwd
-[0.28085] Opening file /etc/passwd with mode r
-[0.28723] init: Initializing cooperative scheduler
-[0.29267] libmanager: looking up module 'event'
-[0.29829] init: Starting service idled
-[0.30475] loadfile: loading /lib/services/idled.lua with mode bt
-[0.31165] Opening file /lib/services/idled.lua with mode r
-[0.31785] scheduler: Spawning task 2 with ID idled
-[0.32354] loadfile: loading /bin/login.lua with mode bt
-[0.32374] Opening file /bin/login.lua with mode r
-[0.32429] scheduler: Spawning task 3 with ID /bin/login.lua
-[0.32442] Current: 2
-[0.32449] libmanager: looking up module 'computer'
-[0.32454] scheduler: Killing task idled (PID 2)
-[0.32461] Current: 3
-[0.32466] libmanager: looking up module 'users'
-[1.41084] users: Attempting login as root
-[3.35541] loadfile: loading /bin/sh.lua with mode bt
-[3.35572] Opening file /bin/sh.lua with mode r
-[3.35815] scheduler: Spawning task 4 with ID /bin/sh.lua
-[3.35822] Current: 4
-[3.35827] libmanager: looking up module 'users'
-[3.35831] sh: reading config
-[3.35873] Current: 3
-[3.35880] Current: 4
-[5.34627] loadfile: loading /bin/cat.lua with mode bt
-[5.34687] Opening file /bin/cat.lua with mode r
-[5.34913] Opening file /test.txt with mode r
-[5.63342] Current: 3
-[5.63730] Current: 4
-[6.87867] loadfile: loading /bin/ls.lua with mode bt
-[6.87899] Opening file /bin/ls.lua with mode r
-[7.24925] Current: 3
-[7.24993] Current: 4
-[9.48151] loadfile: loading /bin/rm.lua with mode bt
-[9.48379] Opening file /bin/rm.lua with mode r
-[9.48875] libmanager: looking up module 'event'
-[9.74193] Current: 3
-[9.74259] Current: 4
-[10.6987] loadfile: loading /bin/ls.lua with mode bt
-[10.7001] Opening file /bin/ls.lua with mode r
-[10.9763] Current: 3
-[10.9770] Current: 4
-[12.7265] loadfile: loading /bin/ls.lua with mode bt
-[12.7270] Opening file /bin/ls.lua with mode r
-[13.1086] Current: 3
-[13.1093] Current: 4
-[15.9230] loadfile: loading /bin/ls.lua with mode bt
-[15.9235] Opening file /bin/ls.lua with mode r
-[16.2147] Current: 3
-[16.2150] Current: 4
-[39.5694] loadfile: loading /sbin/shutdown.lua with mode bt
-[39.5705] Opening file /sbin/shutdown.lua with mode r
-[39.5734] libmanager: looking up module 'computer'
-[39.5736] Shutting down
+[0.07684] Open Kernel 2.0.0-rc1 booting on Lua 5.2
+[0.07808] Total memory: 1024K
+[0.07854] Free memory: 839K
+[0.07899] Initializing filesystems
+[0.07963] Stage 1: helpers
+[0.08021] Stage 2: mounting, unmounting
+[0.08107] Stage 3: standard FS API
+[0.08190] Mounting f986e3c1-8da1-b21f-226b-303f32fe2cf8 on /tmp
+[0.08269] Reading /etc/fstab
+[0.08327] Failed to read fstab: No such file or directory
+[0.08415] Setting up utilities
+[0.08455] util: loadfile
+[0.08487] util: table.new
+[0.08517] util: table.copy
+[0.08548] util: table.serialize
+[0.08581] util: table.iter
+[0.08614] util: string.tokenize
+[0.08649] util: os.sleep
+[0.08682] util: fs.clean
+[0.08717] Loading init: /sbin/init.lua
+[0.08770] loadfile: loading /sbin/init.lua with mode bt
+[0.08857] Opening file /sbin/init.lua with mode r
+[0.09066] OpenRC 2.0.0-pre1 starting up Open Kernel 2.0.0-rc1
+[0.09154] init: Reading configuration from /etc/inittab
+[0.09244] Opening file /etc/inittab with mode r
+[0.09433] init: loading vcomponent
+[0.09523] loadfile: loading /lib/modules/vcomponent.lua with mode bt
+[0.09623] Opening file /lib/modules/vcomponent.lua with mode r
+[0.09777] init: loading libmanager
+[0.09825] loadfile: loading /lib/modules/libraries.lua with mode bt
+[0.09911] Opening file /lib/modules/libraries.lua with mode r
+[0.10076] init: loading events
+[0.10126] loadfile: loading /lib/modules/events.lua with mode bt
+[0.10217] Opening file /lib/modules/events.lua with mode r
+[0.10378] libmanager: looking up module 'computer'
+[0.10449] init: loading input
+[0.10499] loadfile: loading /lib/modules/input.lua with mode bt
+[0.10590] Opening file /lib/modules/input.lua with mode r
+[0.11389] libmanager: looking up module 'event'
+[0.12045] init: loading io
+[0.12627] loadfile: loading /lib/modules/io.lua with mode bt
+[0.13191] Opening file /lib/modules/io.lua with mode r
+[0.13799] libmanager: looking up module 'buffer'
+[0.14359] loadfile: loading /lib/buffer.lua with mode bt
+[0.15069] Opening file /lib/buffer.lua with mode r
+[0.15740] libmanager: looking up module 'computer'
+[0.16301] init: loading devfs
+[0.16829] loadfile: loading /lib/modules/devfs.lua with mode bt
+[0.17406] Opening file /lib/modules/devfs.lua with mode r
+[0.18131] libmanager: looking up module 'component'
+[0.18690] libmanager: looking up module 'event'
+[0.19282] vcomponent: Adding component: type filesystem, addr a7f2f3b9-fe44-ea2f-3e7e-2fd0af1eb23f
+[0.20008] Mounting a7f2f3b9-fe44-ea2f-3e7e-2fd0af1eb23f on /dev
+[0.20722] devfs: adding device 8f527f6e-daf0-3dfc-ffc7-26294f51f4ba at /dev/data0
+[0.21348] devfs: adding device 2f717c26-751f-aab8-0895-07e323ca0195 at /dev/comp0
+[0.21934] devfs: adding device 780c8555-f604-a284-43e9-ea4fdb8ec31e at /dev/gpu0
+[0.22494] devfs: adding device 67c66973-51ff-4aec-29cd-baabf2fbe346 at /dev/scrn0
+[0.23096] devfs: adding device 7204e6ed-304d-916a-9d8e-4b7daf23eb27 at /dev/eeprom0
+[0.23671] devfs: adding device f0332300-df87-71cf-220f-892a2a882bcb at /dev/net0
+[0.24256] devfs: adding device f986e3c1-8da1-b21f-226b-303f32fe2cf8 at /dev/fs0
+[0.24840] devfs: adding device 6bedf9ef-6246-9541-c47b-53408e5c2f7e at /dev/net0
+[0.25557] devfs: adding device 73de2934-10ac-6470-f09b-9eba071aff01 at /dev/fs1
+[0.26211] devfs: adding device 3feda9a1-343f-e2f8-ba35-38489267c721 at /dev/sandbox0
+[0.26823] devfs: adding device a1e2c22e-8474-4da6-df7d-e6117c1209ef at /dev/kbd0
+[0.27398] init: loading components
+[0.27930] loadfile: loading /lib/modules/components.lua with mode bt
+[0.28534] Opening file /lib/modules/components.lua with mode r
+[0.29162] libmanager: looking up module 'component'
+[0.29764] components: creating proxy: type data, address 8f527f6e-daf0-3dfc-ffc7-26294f51f4ba
+[0.30465] components: creating proxy: type eeprom, address 7204e6ed-304d-916a-9d8e-4b7daf23eb27
+[0.31203] components: creating proxy: type modem, address f0332300-df87-71cf-220f-892a2a882bcb
+[0.31845] components: creating proxy: type internet, address 6bedf9ef-6246-9541-c47b-53408e5c2f7e
+[0.32425] init: loading users
+[0.32961] loadfile: loading /lib/modules/users.lua with mode bt
+[0.33528] Opening file /lib/modules/users.lua with mode r
+[0.34256] libmanager: looking up module 'unicode'
+[0.34834] libmanager: looking up module 'config'
+[0.35409] loadfile: loading /lib/config.lua with mode bt
+[0.36081] Opening file /lib/config.lua with mode r
+[0.36774] libmanager: looking up module 'sha256'
+[0.37357] loadfile: loading /lib/sha256.lua with mode bt
+[0.37941] Opening file /lib/sha256.lua with mode r
+[0.38761] libmanager: looking up module 'component'
+[0.39389] table: 0xaaaae94b6f50 nil
+[0.39970] users: Reading /etc/passwd
+[0.41350] Opening file /etc/passwd with mode r
+[0.41966] init: Initializing cooperative scheduler
+[0.42497] libmanager: looking up module 'event'
+[0.43049] init: Starting service idled
+[0.43601] loadfile: loading /lib/services/idled.lua with mode bt
+[0.44192] Opening file /lib/services/idled.lua with mode r
+[0.44810] scheduler: Spawning task 2 with ID idled
+[0.45434] loadfile: loading /bin/login.lua with mode bt
+[0.45465] Opening file /bin/login.lua with mode r
+[0.45548] scheduler: Spawning task 3 with ID /bin/login.lua
+[0.45566] Current: 2
+[0.45575] libmanager: looking up module 'computer'
+[0.45583] idled: not needed in multi-user mode
+[0.45590] scheduler: Killing task idled (PID 2)
+[0.45597] Current: 3
+[0.45604] libmanager: looking up module 'users'
+[0.45650] events: Pushing signal device_added
+[1.47229] users: Attempting login as root
+[3.33325] loadfile: loading /bin/sh.lua with mode bt
+[3.33346] Opening file /bin/sh.lua with mode r
+[3.33495] scheduler: Spawning task 4 with ID /bin/sh.lua
+[3.33502] Current: 4
+[3.33507] libmanager: looking up module 'users'
+[3.33513] sh: reading config
+[3.33552] Current: 3
+[3.33559] Current: 4
+[4.24904] loadfile: loading /bin/ls.lua with mode bt
+[4.24946] Opening file /bin/ls.lua with mode r
+[4.25180] scheduler: Spawning task 5 with ID /bin/ls.lua
+[4.25200] Current: 5
+[4.25235] devfs: checking existence /
+[4.53765] Current: 3
+[4.53813] Current: 4
+[9.53291] scheduler: Task /bin/ls.lua (PID 5) died
+[9.78534] Current: 3
+[9.78599] Current: 4
+[13.9998] loadfile: loading /bin/cat.lua with mode bt
+[14.0003] Opening file /bin/cat.lua with mode r
+[14.0019] scheduler: Spawning task 6 with ID /bin/cat.lua
+[14.0022] Current: 6
+[14.0027] devfs: checking existence /eeprom0
+[14.0029] Opening file /dev/eeprom0 with mode r
+[14.2550] Current: 3
+[14.2556] Current: 4
+[24.1516] loadfile: loading /bin/ls.lua with mode bt
+[24.1526] Opening file /bin/ls.lua with mode r
+[24.1567] scheduler: Spawning task 7 with ID /bin/ls.lua
+[24.1570] scheduler: Task /bin/cat.lua (PID 6) died
+[24.1572] Current: 7
+[24.1578] devfs: checking existence /gpu0
+[24.4547] Current: 3
+[24.4554] Current: 4
+[56.0569] loadfile: loading /sbin/shutdown.lua with mode bt
+[56.0577] Opening file /sbin/shutdown.lua with mode r
+[56.0599] scheduler: Spawning task 8 with ID /sbin/shutdown.lua
+[56.0604] scheduler: Task /bin/ls.lua (PID 7) died
+[56.0607] Current: 8
+[56.0609] libmanager: looking up module 'computer'
+[56.0610] Shutting down

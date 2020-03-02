@@ -123,7 +123,7 @@ function shell.exec(cmd, ...) -- It is probably best to call this with pcall, co
   if not ok then
     return error(err)
   end
-  local s, r = pcall(function()return ok(table.unpack(exec, 2, #exec))end)
+  local s, r = os.spawn(function()return ok(table.unpack(exec, 2, #exec))end, cmdPath)
   if not s then
     return error(r)
   end

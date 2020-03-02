@@ -210,6 +210,7 @@ local function resolve(path) -- Resolve a path to a filesystem proxy
   for i=1, #mounts, 1 do
     if mounts[i].path then
       local pathSeg = cleanPath(path:sub(1, #mounts[i].path))
+--      kernel.log(pathSeg .. " =? " .. mounts[i].path)
       if pathSeg == mounts[i].path then
         path = cleanPath(path:sub(#mounts[i].path + 1))
         proxy = mounts[i].proxy
@@ -235,11 +236,14 @@ function fs.mount(addr, path)
       if data.proxy.address == addr then
         return true, "Filesystem already mounted"
       else
-        return false, "Cannot override mounts"
+        return false, "Cannot override existing mounts"
       end
     end
   end
   if kernel.__component.type(addr) == "filesystem" then
+    if path == "/mnt/devfs" then
+      return
+    end
     kernel.log("Mounting " .. addr .. " on " .. path)
     if fs.makeDirectory then
       fs.makeDirectory(path)
@@ -375,6 +379,7 @@ function fs.isDirectory(path)
   checkArg(1, path, "string")
   local path, proxy = resolve(path)
 
+--  kernel.log(path .. " " .. proxy.type .. " " .. proxy.address .. " " .. type(proxy.isDirectory))
   return proxy.isDirectory(path)
 end
 
@@ -422,7 +427,7 @@ end
 
 function fs.setLabel(label, path)
   checkArg(1, label, "string")
-  checkArg(2, "string", "nil")
+  checkArg(2, path, "string", "nil")
   local path, proxy = resolve(path or "/")
 
   return proxy.setLabel(label)

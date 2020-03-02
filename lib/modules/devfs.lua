@@ -40,9 +40,13 @@ local types = {
 }
 
 local function addDfsDevice(addr, dtype)
+  if addr == dfs.address then return end
+--  kernel.log(addr .. " " .. dtype)
   local path = "/" .. (types[dtype] or dtype)
+  if dtype == "filesystem" and component.invoke(addr, "getLabel") == "devfs" then
+    return
+  end
   local n = 0
-  kernel.log("devfs: adding device /dev" .. path)
   for k,v in pairs(devices) do
     if v.proxy and v.path and v.proxy.address then
       if v.proxy.address == addr then
@@ -54,6 +58,7 @@ local function addDfsDevice(addr, dtype)
     end
   end
   path = path .. tostring(n)
+  kernel.log("devfs: adding device " .. addr .. " at /dev" .. path)
   devices[#devices + 1] = {path = path, proxy = component.proxy(addr)}
 end
 
@@ -69,13 +74,12 @@ local function resolveDevice(d)
 end
 
 local function makeHandleEEPROM(dev, mode)
-  checkArg(1, dev, "string")
+  checkArg(1, dev, "table")
   checkArg(2, mode, "string", "nil")
-  local dproxy = resolveDevice(dev)
-  if dproxy.type ~= "eeprom" then return false, "Device is not an EEPROM" end
+  if dev.type ~= "eeprom" then return false, "Device is not an EEPROM" end
   local d = {}
   function d.read()
-    return dproxy.getData()
+    return dev.getData()
   end
   handles[#handles + 1] = d
   return #handles
@@ -84,12 +88,21 @@ end
 function dfs.open(dev, mode)
   checkArg(1, dev, "string")
   checkArg(2, mode, "string", "nil")
-  local device, dtype = resolveDevice(dev)
-  if dtype == "eeprom" then
+  local device = resolveDevice(dev)
+  if device.proxy.type == "eeprom" then
     local handle = makeHandleEEPROM(device, mode)
     return handle
   else
     return false, "Only EEPROMs are currently supported for opening"
+  end
+end
+
+function dfs.isDirectory(d)
+  checkArg(1, d, "string")
+  if d == "/" then
+    return true
+  else
+    return false
   end
 end
 

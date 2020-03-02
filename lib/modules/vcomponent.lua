@@ -10,12 +10,12 @@ function component.create(componentAPI)
   checkArg(1, componentAPI, "table")
   kernel.log("vcomponent: Adding component: type " .. componentAPI.type .. ", addr " .. componentAPI.address)
   vcomponents[componentAPI.address] = componentAPI
-  ps("component_added", componentAPI.type, componentAPI.address)
+  ps("component_added", componentAPI.address, componentAPI.type)
 end
 
 function component.remove(addr)
   if vcomponents[addr] then
-    ps("component_removed", vcomponents[addr].type, vcomponents[addr].address)
+    ps("component_removed", vcomponents[addr].address, vcomponents[addr].type)
     vcomponents[addr] = nil
     return true
   end
@@ -23,12 +23,30 @@ function component.remove(addr)
 end
 
 function component.list(ctype, match)
+  local matches = {}
   for k,v in pairs(vcomponents) do
-    if v.type == ctype then
-      return k
+    if v.type == ctype or not ctype then
+      matches[v.address] = v.type
     end
   end
-  return list(ctype, match)
+  local o = list(ctype, match) or {}
+  local i = 1
+  local a = {}
+  for k,v in pairs(matches) do
+    a[#a+1] = k
+  end
+  for k,v in pairs(o) do
+    a[#a+1] = k
+  end
+  local function c()
+    if a[i] then
+      i = i + 1
+      return a[i - 1], (matches[a[i - 1]] or o[a[i - 1]])
+    else
+      return nil
+    end
+  end
+  return setmetatable(matches, {__call = c})
 end
 
 function component.invoke(addr, operation, ...)

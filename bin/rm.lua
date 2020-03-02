@@ -18,7 +18,7 @@ for i=1, #args, 1 do
     print("rm: " .. path .. ": No such file or directory")
   else
     if ask then
-      write("rm: Remove " .. path .. "? [y/n] ")
+      io.write("rm: Remove " .. path .. "? [y/n] ")
       local k = ""
       repeat
         local e,_,id=event.pull()
