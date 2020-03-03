@@ -28,7 +28,7 @@ if #args > 0 then
     else
       local u = ""
       repeat
-        write("username: ")
+        io.write("username: ")
         u = read()
       until u ~= ""
       users.adduser(u)
@@ -40,10 +40,14 @@ if #args > 0 then
     else
       local u = ""
       repeat
-        write("username: ")
-	u = read()
+        io.write("username: ")
+        u = read()
       until u ~= ""
       users.deluser(u)
+    end
+  elseif args[1] == "list" then
+    for user in table.iter(users.list()) do
+      print(user)
     end
   elseif args[1] == "help" then
     print(usage)
@@ -55,7 +59,7 @@ print("User Manager 1.0.0-pre1 (c) 2020 Ocawesome101.")
 print("Type 'help' for help.")
 
 while not exit do
-  write("usermgr> ")
+  io.write("usermgr> ")
   local input = read()
   if input and input ~= "" then
     input = string.tokenize(" ", input)
@@ -68,27 +72,29 @@ while not exit do
       local name = input[2] or ""
       if name == "" or not name then
         repeat
-          write("username: ")
+          io.write("username: ")
           name = read()
         until name ~= ""
       end
       local ok, err = users.adduser(name)
       if not ok then
-	error(err)
+        error(err)
       end
     elseif input[1] == "list" then
-      print("This command is not yet implemented.")
+      for user in table.iter(users.list()) do
+        print(user)
+      end
     elseif input[1] == "del" then
       local name = input[2] or ""
       if name == "" or not name then
-	repeat
-	  write("username: ")
-	  name = read()
-	until name ~= ""
+        repeat
+          io.write("username: ")
+          name = read()
+        until name ~= ""
       end
       local ok, err = users.deluser(name)
       if not ok then
-	error(err)
+        error(err)
       end
     end
   end

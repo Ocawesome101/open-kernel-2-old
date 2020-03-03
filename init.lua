@@ -4,6 +4,7 @@
 local flags = {
   init = "/sbin/init.lua",
   runlevel = 2, -- Runlevel the system should attempt to reach
+  disableLogging = false, -- Enable this option if you're running from a read-only FS
   verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded
 }
 

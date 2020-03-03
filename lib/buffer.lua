@@ -131,6 +131,7 @@ function buffer:lines()
 end
 
 function buffer:close()
+  if self.mode.w then self:flush() end
   return self.stream.close()
 end
 

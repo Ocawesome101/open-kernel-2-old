@@ -125,11 +125,11 @@ kernel._VERSION = "Open Kernel 2.0.0-rc1"
 bootfs.rename("/boot/log", "/boot/log.old")
 
 local kernelLog, err = bootfs.open("/boot/log", "w")
-local verbose = flags.verbose or true
+local verbose = flags.verbose
 
 function kernel.log(msg)
   local m = "[" .. time() .. "] " .. msg
-  bootfs.write(kernelLog, m .. "\n")
+  if not flags.disableLogging then bootfs.write(kernelLog, m .. "\n") end
   if verbose then
     print(m)
   end

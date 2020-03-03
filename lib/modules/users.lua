@@ -61,6 +61,14 @@ function users.uid()
   return uid
 end
 
+function users.list()
+  local u = {}
+  for k,_ in pairs(passwd) do
+    u[#u + 1] = k
+  end
+  return u
+end
+
 function users.home()
   if user ~= "root" or uid ~= 0 then
     return "/home/" .. user

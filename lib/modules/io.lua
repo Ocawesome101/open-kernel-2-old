@@ -27,6 +27,7 @@ function io.write(data)
 end
 
 function io.close()
+  io.output():flush()
   io.output():close()
   io.stdout = buffer.new(nil, "w")
 end

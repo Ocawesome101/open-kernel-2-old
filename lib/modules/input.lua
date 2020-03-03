@@ -2,14 +2,14 @@
 
 local event = require("event")
 
-function _G.read(replace, history, default)
+function _G.read(replace, history, default, hPos)
   checkArg(1, replace, "string", "nil")
   checkArg(2, history, "table", "nil")
   checkArg(3, default, "string", "nil")
   local str = default or ""
   if replace then replace = replace:sub(1,1) end
 
-  local histPos
+  local histPos = hPos or nil
   local history = history or {}
   local pos, scroll = #str, 0
   local w = gpu.getResolution()
@@ -118,5 +118,5 @@ function _G.read(replace, history, default)
     end
   end
   io.write("\n")
-  return str
+  return str, histPos
 end
