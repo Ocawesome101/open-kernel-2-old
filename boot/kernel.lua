@@ -229,7 +229,9 @@ kernel.log("Stage 2: mounting, unmounting")
 function fs.mount(addr, path)
   checkArg(1, addr, "string")
   checkArg(2, path, "string", "nil")
-  local path = path or "/mnt/" .. (kernel.__component.invoke(addr, "getLabel") or addr:sub(1, 6))
+  local label = kernel.__component.invoke(addr, "getLabel")
+  label = (label ~= "" and label) or nil
+  local path = path or "/mnt/" .. (label or addr:sub(1, 6))
   path = cleanPath(path)
   local p, pr = resolve(path)
   for _, data in pairs(mounts) do
