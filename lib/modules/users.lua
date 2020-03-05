@@ -159,4 +159,4 @@ function users.deluser(name)
   return true, "User removed"
 end
 
-lib.loaded["users"] = users
+package.loaded["users"] = users

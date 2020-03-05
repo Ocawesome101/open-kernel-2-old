@@ -72,4 +72,4 @@ event.pull = function(filter, timeout)
   end
 end
 
-lib.loaded["event"] = event
+package.loaded["event"] = event

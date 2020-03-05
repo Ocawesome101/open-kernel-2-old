@@ -154,7 +154,7 @@ for addr, ctype in component.list() do
   addDfsDevice(addr, ctype)
 end
 
-lib.loaded["devfs"] = {
+package.loaded["devfs"] = {
   getAddress = function(device)
     local proxy = resolveDevice(device)
     return proxy.address

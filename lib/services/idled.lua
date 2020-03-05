@@ -1,29 +1,29 @@
--- idled: for when your system is just idling --
+-- Restart the shell/login if they terminate --
 
 local computer = require("computer")
 
+local program = "/bin/sh.lua"
+
+if computer.runlevel() >= 2 then
+  program = "/bin/login.lua"
+end
+
 while true do
-  if computer.runlevel() >= 2 then
-    kernel.log("idled: not needed in multi-user mode")
-    os.kill(os.pid()) -- We aren't needed
-  end
   coroutine.yield()
-  local shellRunning = false
-  local tasks = os.tasks()
-  for k, v in pairs(tasks) do
-    if os.info(v).name == "/bin/sh.lua" then
-      shellRunning = true
+  local t = os.tasks()
+  local running = false
+  for k,v in pairs(t) do
+    if os.info(v).name == program then
+      running = true
     end
   end
-  if not shellRunning and computer.runlevel() == 1 then -- The shell has been exited, and we're in single-user mode!
-    kernel.log("idled: shell is not running. Restarting shell.")
-    local ok, err = loadfile("/bin/sh.lua")
+  if not running then
+    local ok, err = loadfile(program)
     if not ok then
-      kernel.log("idled: error " .. err .. " loading /bin/sh.lua!")
-      kernel.log("waiting 5s before retrying")
+      print(err)
       os.sleep(5)
-    else
-      os.spawn(ok, "/bin/sh.lua")
     end
+    os.spawn(ok, program)
+    coroutine.yield()
   end
 end

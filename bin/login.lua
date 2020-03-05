@@ -5,16 +5,16 @@ local users = require("users")
 -- e-z config :P
 local cls = true
 
-if cls then
-  local w,h = gpu.getResolution()
-  gpu.fill(1,1,w,h," ")
-  gpu.setCursorPos(1,1)
-end
-
 for _,t in pairs(os.tasks()) do
   if os.info(t).name == "/bin/sh.lua" then
     return print("login: shell is already running!")
   end
+end
+
+if cls then
+  local w,h = gpu.getResolution()
+  gpu.fill(1,1,w,h," ")
+  gpu.setCursorPos(1,1)
 end
 
 while true do

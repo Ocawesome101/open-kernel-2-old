@@ -1,10 +1,10 @@
--- Module system. Not the most memory-friendly, but it works. --
+-- Module system. Not the most memory-friendly, but it works. And, it's (mostly) standard-Lua-compliant! --
 
-_G.lib = {}
+_G.package = {}
 
-lib.path = "/lib;/usr/lib;/usr/include"
+package.path = "/lib/?.lua;/lib/?/init.lua;/usr/lib/?.lua;/usr/lib/?/init.lua;/usr/include/?.lua;/usr/include/?/init.lua"
 
-lib.loaded = {
+package.loaded = {
   ["_G"] = _G,
   ["string"] = string,
   ["table"] = table,
@@ -17,26 +17,31 @@ lib.loaded = {
 
 _G.component, _G.computer, _G.unicode = nil, nil, nil
 
+local function resolveModule(path, n)
+  local p = ""
+  local c = path:find("%?")
+  p = path:sub(1,c-1) .. n .. path:sub(c+1)
+  return p
+end
+
 local function genLibError(n)
-  local err = "Library '" .. n .. "' not found:\n  no field lib.loaded['" .. n .. "']"
-  for path in string.tokenize(";", lib.path) do
-    err = err .. "\n  no file '" .. fs.clean(path .. "/" .. n) .. "'"
-    err = err .. "\n  no file '" .. fs.clean(path .. "/" .. n .. ".lua") .. "'"
+  local err = "Library '" .. n .. "' not found:\n  no field package.loaded['" .. n .. "']"
+  for path in string.tokenize(";", package.path) do
+    err = err .. "\n  no file '" .. resolveModule(path, n) .. "'"
+    err = err .. "\n  no file '" .. resolveModule(path, n) .. "'"
   end
   return err
 end
 
-function lib.search(name) -- Search the module path for a lib
+-- TODO: Do something with path, sep, rep
+function package.searchpath(name, path, sep, rep) -- Search the module path for a package
   checkArg(1, name, "string")
-  local paths = string.tokenize(";", lib.path)
+  local paths = string.tokenize(";", package.path)
   for path in paths do
     path = fs.clean(path)
---    kernel.log(path .. "/" .. name .. ".lua")
-    if fs.exists(path .. "/" .. name .. ".lua") then
-      return fs.clean(path .. "/" .. name .. ".lua")
-    end
-    if fs.exists(path .. "/" .. name) then
-      return fs.clean(path .. "/" .. name)
+    module = resolveModule(path, name)
+    if fs.exists(module) then
+      return module
     end
   end
   return false, genLibError(name)
@@ -57,20 +62,17 @@ end
 
 function _G.require(library)
   checkArg(1, library, "string")
---  kernel.log(tostring(lib.loaded[library]))
-  kernel.log("libmanager: looking up module '" .. library .. "'")
   if library:sub(1, 1) == "/" then
     return dofile(library)
-  elseif lib.loaded[library] then
-    return lib.loaded[library]
+  elseif package.loaded[library] then
+    return package.loaded[library]
   else
-    local path, err = lib.search(library)
+    local path, err = package.searchpath(library)
     if not path then
-      kernel.log("libmanager: requiring module '" .. library .. "' failed: " .. err)
       return false, err
     end
     local a, r = dofile(path)
-    if a and type(a) == "table" then lib.loaded[library] = a end
+    if a and type(a) == "table" then package.loaded[library] = a end
     return a, r
   end
 end

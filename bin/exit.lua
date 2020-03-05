@@ -1,8 +1,9 @@
 -- logout: Kill the shell, spawn a login screen
 
-local ok, err = loadfile("/bin/login.lua")
-if not ok then
-  return print(err)
+for k,v in pairs(os.tasks()) do
+  if os.info(v).name == "/bin/sh.lua" then
+    os.kill(v)
+  end
 end
 
 os.kill(os.pid())

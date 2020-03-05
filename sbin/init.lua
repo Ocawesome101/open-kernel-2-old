@@ -134,7 +134,7 @@ if maxRunlevel >= 2 then
     if not ok then
       kernel.log("init: Service " .. v.id .. " failed: " .. err)
     else
-      os.spawn(ok, v.id)
+      os.spawn(ok, v.file)
     end
   end
 end

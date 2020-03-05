@@ -4,7 +4,7 @@ local users = require("users")
 
 _G.shell = {}
 
-shell._VERSION = "Open Shell 2.0.0-pre2"
+shell._VERSION = "Open Shell 2.0.0-rc2"
 
 local env = {
   HOME = users.home(),
@@ -34,7 +34,7 @@ local colors = { -- How to color escape sequences
 local config = {}
 
 kernel.log("sh: reading config")
-local handle, err = fs.open(os.getenv("PWD") .. "/.shconfig")
+local handle, err = io.open(env.PWD .. "/.shconfig")
 if handle then
   local data = handle:readAll()
   handle:close()
@@ -43,7 +43,7 @@ if handle then
     local s, r = pcall(ok)
     if s then
       config = s
-      colors = colors or config.colors
+      colors = config.colors or colors
     end
   end
 end
@@ -51,6 +51,8 @@ end
 if not fs.exists(env.PWD) then
   fs.makeDirectory(env.PWD)
 end
+
+local shrc = config.shrc or env.PWD .. "/.shrc"
 
 function shell.pwd()
   return env.PWD
@@ -100,8 +102,14 @@ function shell.parse(...)
   return args, options
 end
 
-function shell.exec(cmd, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
-  checkArg(1, cmd, "string")
+function shell.exec(cmd, cmd2, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
+  checkArg(1, cmd, "string", "boolean")
+  checkArg(2, cmd2, "string", "nil")
+  local noSeparate = false
+  if type(cmd) == "boolean" then
+    noSeparate = true
+    cmd = cmd2
+  end
   local exec = string.tokenize(" ", cmd, ...)
   local cmd = exec[1]
   local cmdPath = ""
@@ -123,9 +131,16 @@ function shell.exec(cmd, ...) -- It is probably best to call this with pcall, co
   if not ok then
     return error(err)
   end
-  local s, r = os.spawn(function()return ok(table.unpack(exec, 2, #exec))end, cmdPath)
-  if not s then
-    return error(r)
+  if noSeparate then
+    local s,r = pcall(function()return ok(table.unpack(exec, 2, #exec))end)
+    if not s then
+      return error(r)
+    end
+  else
+    local s, r = os.spawn(function()return ok(table.unpack(exec, 2, #exec))end, cmdPath)
+    if not s then
+      return error(r)
+    end
   end
 end
 
@@ -164,6 +179,15 @@ local function printError(...)
 end
 
 coroutine.yield()
+
+local motd = loadfile("/usr/bin/motd.lua")
+if motd then
+  local w,h = gpu.getResolution()
+  gpu.fill(1,1,w,h," ")
+  gpu.setCursorPos(1,1)
+  motd()
+end
+
 local history = table.new()
 while true do
   prompt()

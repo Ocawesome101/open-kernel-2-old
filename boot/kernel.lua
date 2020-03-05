@@ -6,7 +6,7 @@ local bootAddress = computer.getBootAddress()
 local startTime = computer.uptime()
 
 local filesystems = {}
-local bootfs = component.proxy(bootAddress)
+local bootfs = component.proxy(((pcall(component.type, flags.bootAddress)) and flags.bootAddress) or bootAddress) -- You can specify a custom boot-address, this should check if it's valid
 local init = flags.init or "/sbin/init.lua"
 
 -- component proxies
@@ -106,23 +106,26 @@ function print(...)
 end
 
 local uptime = computer.uptime
-local function time() -- Format the computer's uptime so we can print it nicely
-  local u = tostring(uptime() - startTime):sub(1, 7)
-  local c = u:find("%.") or 4
-  if c == 7 then
-    u = u:sub(2) .. "0"
+local function time() -- Properly format the computer's uptime so we can print it nicely
+  local r = tostring(uptime()):sub(1,7)
+  local c,_ = r:find("%.")
+  local c = c or 4
+  if c < 4 then
+    r = string.rep("0",4-c) .. r
+  elseif c > 4 then
+    r = r .. string.rep("0",c-4)
   end
-  while #u < 7 do
-    u = "0" .. u
+  while #r < 7 do
+    r = r .. "0"
   end
-  return u
+  return r
 end
 
 _G.kernel = {}
 
-kernel._VERSION = "Open Kernel 2.0.0-rc1"
+kernel._VERSION = "Open Kernel 2.0.0-rc3"
 
-bootfs.rename("/boot/log", "/boot/log.old")
+pcall(bootfs.rename("/boot/log", "/boot/log.old"))
 
 local kernelLog, err = bootfs.open("/boot/log", "w")
 local verbose = flags.verbose

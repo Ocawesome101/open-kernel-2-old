@@ -36,7 +36,7 @@ function buffer.new(mode, file)
   else
     local handle, err = fs.open(file, mode)
     if not handle then
-      error(err)
+      return false, err
     end
     rtn.stream = handle
   end
