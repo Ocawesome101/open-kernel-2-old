@@ -48,6 +48,8 @@ function gpu.scroll(amount)
 end
 
 function write(str)
+  checkArg(1, str, "string")
+  local written = 0
   local function newline()
     x = 1
     if y + 1 <= h then
@@ -56,7 +58,9 @@ function write(str)
       gpu.scroll(1)
       y = h
     end
+    written = written + 1
   end
+  str = str:gsub("\t", "    ")
   while #str > 0 do
     local space = str:match("^[ \t]+")
     if space then
@@ -92,17 +96,21 @@ function write(str)
       end
     end
   end
+  return written
 end
 
 function print(...)
   local args = {...}
+  local printed = 0
   for i=1, #args, 1 do
-    write(tostring(args[i]))
+    local written = write(tostring(args[i]))
     if i < #args then
       write(" ")
     end
+    printed = printed + written
   end
   write("\n")
+  return printed
 end
 
 local uptime = computer.uptime
@@ -123,7 +131,7 @@ end
 
 _G.kernel = {}
 
-kernel._VERSION = "Open Kernel 2.0.0-rc3"
+kernel._VERSION = "Open Kernel 2.0.0"
 
 pcall(bootfs.rename("/boot/log", "/boot/log.old"))
 

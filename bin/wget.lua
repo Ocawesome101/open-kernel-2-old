@@ -22,7 +22,7 @@ if not out then
   out = tok[#tok]
 end
 
-local out = shell.resolvePath(out)
+local out = shell.resolve(out)
 
 print("Downloading " .. url .. " as " .. out)
 local ok, err = netutils.download(url, out)

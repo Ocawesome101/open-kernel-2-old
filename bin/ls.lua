@@ -42,7 +42,7 @@ end
 
 if #args > 0 then
   for i=1, #args, 1 do
-    local dir = shell.resolvePath(args[i])
+    local dir = shell.resolve(args[i])
     if not fs.exists(dir) then print("ls: " .. dir .. ": No such file or directory")
     else
       gpu.setForeground(0xFFFFFF)

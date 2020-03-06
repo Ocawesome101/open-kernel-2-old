@@ -9,7 +9,7 @@ if #args < 1 then
 end
 
 for dir in table.iter(args) do
-  local dir = shell.resolvePath(dir)
+  local dir = shell.resolve(dir)
   if verbose then print("Creating " .. dir) end
   fs.makeDirectory(dir)
 end

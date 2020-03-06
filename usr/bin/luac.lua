@@ -66,7 +66,7 @@ end
 
 for i=1, #args, 1 do
   print("luac: running preprocessor on " .. args[i])
-  local d, f = procfname(shell.resolvePath(args[i]))
+  local d, f = procfname(shell.resolve(args[i]))
   local handle, err = fs.open(d .. "/" .. f)
   if not handle then
     return false, err, error("luac: " .. d .. "/" .. f .. ": " .. err)

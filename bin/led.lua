@@ -6,7 +6,7 @@ if #args < 2 or options.h or options.help then
   return print("usage: led FILE LINE")
 end
 
-local file = shell.resolvePath(args[1])
+local file = shell.resolve(args[1])
 if not fs.exists(file) then
   return print("led: " .. args[1] .. ": No such file or directory")
 end

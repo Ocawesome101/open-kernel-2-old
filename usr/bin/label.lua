@@ -10,7 +10,7 @@ if #args < 2 then
 end
 
 local op = args[1]
-local path = shell.resolvePath(args[2])
+local path = shell.resolve(args[2])
 local label = args[3] and table.concat({table.unpack(args, 3, #args)}, " ")
 
 if op == "get" then

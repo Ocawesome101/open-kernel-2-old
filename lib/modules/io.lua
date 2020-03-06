@@ -38,10 +38,12 @@ end
 
 _G.print = function(...)
   local p = {...}
+  local w = ""
   for i=1, #p, 1 do
     io.write(tostring(p[i]))
     if i < #p then
-      io.write(" ")
+      io.write(w, " ")
+      w = "\t"
     end
   end
   io.write("\n")

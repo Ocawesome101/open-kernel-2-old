@@ -18,7 +18,7 @@ if #args < 1 then
 end
 
 local dfs = args[1]
-local mtpath = (args[2] and shell.resolvePath(args[2])) or "/mnt/"
+local mtpath = (args[2] and shell.resolve(args[2])) or "/mnt/"
 local addr = devfs.getAddress(dfs)
 
 if not fs.exists(dfs) then

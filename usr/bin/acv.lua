@@ -18,7 +18,7 @@ if (unpack and pack) or #args < 2 or (not pack and not unpack) then
   return print(usage)
 end
 
-local src = shell.resolvePath(args[1])
+local src = shell.resolve(args[1])
 local dest = args[2]
 if dest:sub(1, 1) ~= "/" then
   dest = fs.clean(shell.pwd() .. "/" .. dest)

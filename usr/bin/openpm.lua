@@ -42,7 +42,7 @@ if args[1] == "install" then
   end
 elseif args[1] == "install-local" then
   local file = args[2]
-  local path = fs.clean(shell.resolvePath(file))
+  local path = fs.clean(shell.resolve(file))
   print("openpm: Installing local package " .. path)
   local ok, err = pkg.installPackage(path)
   if not ok and err then

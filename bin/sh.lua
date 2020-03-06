@@ -4,7 +4,7 @@ local users = require("users")
 
 _G.shell = {}
 
-shell._VERSION = "Open Shell 2.0.0-rc2"
+shell._VERSION = "Open Shell 2.0.0"
 
 local env = {
   HOME = users.home(),
@@ -54,11 +54,11 @@ end
 
 local shrc = config.shrc or env.PWD .. "/.shrc"
 
-function shell.pwd()
+function shell.getWorkingDirectory()
   return env.PWD
 end
 
-function shell.setPwd(dir)
+function shell.setWorkingDirectory(dir)
   checkArg(1, dir, "string")
   if fs.exists(dir) and fs.isDirectory(dir) then
     env.PWD = fs.clean(dir)
@@ -70,7 +70,7 @@ function shell.setPwd(dir)
   end
 end
 
-function shell.resolvePath(path)
+function shell.resolve(path)
   checkArg(1, path, "string")
   if path:sub(1, 1) == "/" then
     return path
@@ -89,11 +89,16 @@ function shell.parse(...)
   for i=1, #input, 1 do
     if input[i]:sub(1, 1) == "-" then
       if input[i]:sub(1, 2) == "--" then
-        options[input[i]:sub(3)] = true
+        local c = input[i]:sub(3):find("=")
+        if c then
+          options[input[i]:sub(3,c - 1)] = input[i]:sub(c + 1)
+        else
+          options[input[i]:sub(3)] = true
+        end
       else
-	for c in input[i]:sub(2):gmatch(".") do
+        for c in input[i]:sub(2):gmatch(".") do
           options[c] = true
-	end
+        end
       end
     else
       args:insert(input[i])
@@ -102,7 +107,7 @@ function shell.parse(...)
   return args, options
 end
 
-function shell.exec(cmd, cmd2, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
+function shell.execute(cmd, cmd2, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
   checkArg(1, cmd, "string", "boolean")
   checkArg(2, cmd2, "string", "nil")
   local noSeparate = false
@@ -199,7 +204,7 @@ while true do
     end
     for cmd in string.tokenize(";", command) do
       gpu.setForeground(colors["char"] or 0xFFFFFF)
-      local s,r = pcall(function()shell.exec(cmd)end)
+      local s,r = pcall(function()shell.execute(cmd)end)
       if not s then printError(r) end
     end
   end

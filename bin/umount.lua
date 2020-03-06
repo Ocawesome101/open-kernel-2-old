@@ -12,7 +12,7 @@ local usage = [[umount (c) 2020 Ocawesome101 under the MIT License.
 Usage: umount PATH
 ]]
 
-local mtpath = shell.resolvePath(args[1])
+local mtpath = shell.resolve(args[1])
 
 if not fs.exists(mtpath) then
   return print("umount: " .. args[1] .. ": no mount point specified")

@@ -5,7 +5,7 @@ local flags = {
   init = "/sbin/init.lua",
   runlevel = 2, -- Runlevel the system should attempt to reach
   disableLogging = true, -- Enable this option if you're running from a read-only FS or you want faster boot. Disable if you want system logs and aren't running from a ROFS
-  verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded
+  verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded. Disabling this does seem to improve boot times..
 }
 
 local addr, invoke = computer.getBootAddress(), component.invoke

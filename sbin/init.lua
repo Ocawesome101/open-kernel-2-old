@@ -110,10 +110,13 @@ do
       for k, v in pairs(tasks) do
         if v.coro and coroutine.status(v.coro) ~= "dead" then
           currentpid = k
-	  kernel.log("Current: " .. tostring(k))
+--          kernel.log("Current: " .. tostring(k))
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
           if not ok and err then
-            kernel.log("Task " .. v.id .. " (PID " .. tostring(k) .. "): " .. tostring(ok) .. " " .. tostring(err))
+            print("ERROR IN THREAD " .. tostring(k) .. ": " .. err)
+            print(debug.traceback())
+            kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died: " .. err)
+            tasks[k] = nil
           end
         elseif v.coro then
           kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died")

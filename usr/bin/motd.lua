@@ -24,6 +24,6 @@ local motds = {
 }
 
 print(("="):rep(24))
-print(shell._VERSION, "on", kernel._VERSION, "-", tostring(math.floor(computer.totalMemory()/1024)) .. "k RAM")
+print(shell._VERSION .. " on " .. kernel._VERSION .. " - " .. tostring(math.floor(computer.totalMemory()/1024)) .. "k RAM")
 print(motds[math.random(1, #motds)])
 print(("="):rep(24))

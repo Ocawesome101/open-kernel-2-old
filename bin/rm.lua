@@ -13,7 +13,7 @@ if #args < 1 then
 end
 
 for i=1, #args, 1 do
-  local path = fs.clean(shell.resolvePath(args[i]))
+  local path = fs.clean(shell.resolve(args[i]))
   if not fs.exists(path) then
     print("rm: " .. path .. ": No such file or directory")
   else

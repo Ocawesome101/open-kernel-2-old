@@ -14,9 +14,9 @@ if #args < 3 or options.h or options.help then
   return
 end
 
-local dir = shell.resolvePath(args[1])
+local dir = shell.resolve(args[1])
 
-local out = shell.resolvePath(args[2])
+local out = shell.resolve(args[2])
 
 local files = fs.list(dir)
 
