@@ -36,7 +36,7 @@ local top, edge = 1, 1
 local w,h = gpu.getResolution()
 
 local function redraw()
-  gpu.setCursorPos(1,1)
+  gpu.setCursor(1,1)
   for i=top, (top+h-2 <= #data and top+h-2) or #data, 1 do
     gpu.fill(1, i - top + 1, w, 1, " ")
     local printed = print((data[i]:sub(edge, w + edge - 1) == "" and "") or data[i]:sub(edge, w + edge - 1):sub(1, -2))
@@ -75,4 +75,4 @@ while true do
 end
 
 gpu.fill(1, 1, w, h, " ")
-gpu.setCursorPos(1,1)
+gpu.setCursor(1,1)

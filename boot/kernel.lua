@@ -31,11 +31,11 @@ local w, h = gpu.getResolution()
 
 gpu.fill(1, 1, w, h, " ")
 
-function gpu.getCursorPos()
+function gpu.getCursor()
   return x, y
 end
 
-function gpu.setCursorPos(X,  Y)
+function gpu.setCursor(X,  Y)
   checkArg(1, X, "number")
   checkArg(2, Y, "number")
   x, y = X, Y
@@ -131,7 +131,7 @@ end
 
 _G.kernel = {}
 
-kernel._VERSION = "Open Kernel 2.0.0"
+kernel._VERSION = "Open Kernel 2.0.2"
 
 pcall(bootfs.rename("/boot/log", "/boot/log.old"))
 
@@ -397,32 +397,76 @@ function fs.isDirectory(path)
   return proxy.isDirectory(path)
 end
 
-function fs.rename(source, dest)
+function fs.copy(source, dest)
   checkArg(1, source, "string")
   checkArg(2, dest, "string")
   local spath, sproxy = resolve(source)
   local dpath, dproxy = resolve(dest)
 
-  if sproxy == dproxy then -- Easy way out
-    return sproxy.rename(spath, dpath)
-  else
-    local s, err = sproxy.open(spath, "r")
-    if not s then
-      return false, err
-    end
-    local d, err = dproxy.open(dpath, "w")
-    if not d then
-      s:close()
-      return false, err
-    end
-    repeat
-      local data = s.read(0xFFFF)
-      d:write((data or ""))
-    until not data
-    s.close()
-    d.close()
-    sproxy.remove(spath)
+  local s, err = sproxy.open(spath, "r")
+  if not s then
+    return false, err
   end
+  local d, err = dproxy.open(dpath, "w")
+  if not d then
+    s:close()
+    return false, err
+  end
+  repeat
+    local data = s.read(0xFFFF)
+    d:write((data or ""))
+  until not data
+  s.close()
+  d.close()
+  return true
+end
+
+function fs.rename(source, dest)
+  checkArg(1, source, "string")
+  checkArg(2, dest, "string")
+
+  local ok, err = fs.copy(source, dest)
+  if ok then
+    fs.remove(source)
+  else
+    return false, err
+  end
+end
+
+function fs.canonicalPath(path)
+  checkArg(1, path, "string")
+  local segments = string.tokenize("/", path)
+  for i=1, #segments, 1 do
+    if segments[i] == ".." then
+      segments[i] = ""
+      table.remove(segments, i - 1)
+    end
+  end
+  return cleanPath(table.concat(segments, "/"))
+end
+
+function fs.path(path)
+  checkArg(1, path, "string")
+  local segments = string.tokenize("/", path)
+  
+  return cleanPath(table.concat({table.unpack(segments, 1, #segments - 1)}, "/"))
+end
+
+function fs.name(path)
+  checkArg(1, path, "string")
+  local segments = string.tokenize("/", path)
+
+  return segments[#segments]
+end
+
+function fs.get(path)
+  checkArg(1, path, "string")
+  if not fs.exists(path) then
+    return false, "Path does not exist"
+  end
+  local path, proxy = resolve(path)
+
+  return proxy
 end
 
 function fs.lastModified(path)

@@ -13,6 +13,10 @@
       id = "events",
       file = "/lib/modules/events.lua"
     },
+--    [4] = { -- Enable this service for OpenOS `keyboard` compatibility. Otherwise, leave it, as it probably hogs memory.
+--      id = "keyboardcompat",
+--      file = "/lib/modules/keyboard.lua"
+--    },
     [4] = {
       id = "input",
       file = "/lib/modules/input.lua"

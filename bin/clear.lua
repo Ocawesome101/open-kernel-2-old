@@ -2,4 +2,4 @@
 
 local w,h = gpu.getResolution()
 gpu.fill(1,1,w,h," ")
-gpu.setCursorPos(1,1)
+gpu.setCursor(1,1)

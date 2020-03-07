@@ -113,7 +113,8 @@ do
 --          kernel.log("Current: " .. tostring(k))
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
           if not ok and err then
-            print("ERROR IN THREAD " .. tostring(k) .. ": " .. err)
+            print("ERROR IN THREAD " .. tostring(k))
+            print(err)
             print(debug.traceback())
             kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died: " .. err)
             tasks[k] = nil

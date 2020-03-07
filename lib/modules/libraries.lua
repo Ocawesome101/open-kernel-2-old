@@ -2,7 +2,7 @@
 
 _G.package = {}
 
-package.path = "/lib/?.lua;/lib/?/init.lua;/usr/lib/?.lua;/usr/lib/?/init.lua;/usr/include/?.lua;/usr/include/?/init.lua"
+package.path = "/lib/?.lua;/lib/?/init.lua;/usr/lib/?.lua;/usr/lib/?/init.lua;/usr/lib/compat/?.lua;/usr/lib/compat/?/init.lua"
 
 package.loaded = {
   ["_G"] = _G,
@@ -18,10 +18,7 @@ package.loaded = {
 _G.component, _G.computer, _G.unicode = nil, nil, nil
 
 local function resolveModule(path, n)
-  local p = ""
-  local c = path:find("%?")
-  p = path:sub(1,c-1) .. n .. path:sub(c+1)
-  return p
+  return path:gsub("%?", n)
 end
 
 local function genLibError(n)

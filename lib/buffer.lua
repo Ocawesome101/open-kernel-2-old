@@ -116,16 +116,14 @@ function buffer:lines()
   local start = 1
   return function()
     if #self.rbuf < self.bufsize then
-      self.rbuf = self.rbuf .. self.stream.read(self.bufsize - #self.rbuf)
+      self.rbuf = self.rbuf .. (self.stream.read(self.bufsize - #self.rbuf) or "")
     end
     local i = self.rbuf:find("\n", start)
     if not i then
       return nil
     end
     local tmp = self.rbuf:sub(start, i)
-    if i < #self.rbuf then
-      start = i + 1
-    end
+    start = i + 1
     return tmp
   end
 end

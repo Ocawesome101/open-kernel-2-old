@@ -4,7 +4,7 @@ local users = require("users")
 
 _G.shell = {}
 
-shell._VERSION = "Open Shell 2.0.0"
+shell._VERSION = "Open Shell 2.0.2"
 
 local env = {
   HOME = users.home(),
@@ -60,6 +60,7 @@ end
 
 function shell.setWorkingDirectory(dir)
   checkArg(1, dir, "string")
+  local dir = fs.canonicalPath(dir)
   if fs.exists(dir) and fs.isDirectory(dir) then
     env.PWD = fs.clean(dir)
     return true
@@ -73,13 +74,9 @@ end
 function shell.resolve(path)
   checkArg(1, path, "string")
   if path:sub(1, 1) == "/" then
-    return path
+    return fs.canonicalPath(path)
   else
-    if path:find("%.%.") then -- This is not yet supported
-      return os.getenv("PWD")
-    else
-      return fs.clean(os.getenv("PWD") .. "/" .. path)
-    end
+    return fs.clean(fs.canonicalPath(os.getenv("PWD") .. "/" .. path))
   end
 end
 
@@ -126,8 +123,12 @@ function shell.execute(cmd, cmd2, ...) -- It is probably best to call this with 
   for path in string.tokenize(":", env.PATH) do
     check(path .. "/" .. cmd .. ".lua")
     check(path .. "/" .. cmd)
-    check(cmd)
-    check(cmd .. ".lua")
+  end
+  check(cmd)
+  check(cmd .. ".lua")
+  if cmd:sub(1,2) == "./" then
+    check(env.PWD .. "/" .. cmd:sub(3))
+    check(env.PWD .. "/" .. cmd:sub(3) .. ".lua")
   end
   if cmdPath == "" then
     return print("sh: " .. cmd .. ": command not found")
@@ -187,9 +188,6 @@ coroutine.yield()
 
 local motd = loadfile("/usr/bin/motd.lua")
 if motd then
-  local w,h = gpu.getResolution()
-  gpu.fill(1,1,w,h," ")
-  gpu.setCursorPos(1,1)
   motd()
 end
 

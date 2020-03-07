@@ -1,1 +1,1 @@
-print(shell.pwd())
+print(os.getenv("PWD"))

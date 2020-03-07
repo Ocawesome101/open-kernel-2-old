@@ -124,22 +124,34 @@ print("occ: preprocessor finished")
 print("occ: compiling")
 
 local compilerWords = {
-  int = true,
-  void = true,
-  const = true,
+  ["int"] = true,
+  ["void"] = true,
+  ["const"] = true,
   ["char*"] = true
 }
 
 local output = {}
 
+local inExec = false
+local ignore = false
 for line in table.iter(lines) do
   local tline, outline = {}, ""
   for word in line:gmatch("[^ ]+") do
     print(word)
     tline[#tline + 1] = word
+    for w,_ in next, compilerWords do
+      if word:find(w .. " ") then -- fragile
+        ignore = true
+        print("occ: ignoring " .. word)
+      end
+    end
     if compilerWords[word] then
+      ignore = true
       print("occ: ignoring " .. word)
-    elseif word:match("%(") and not word:match(";") and not word:match("[{}]") then
+    end
+    if ignore then
+      ignore = false
+    elseif word:match("%(") and not inExec then
       outline = outline .. "local function " .. word
     elseif word == "if" then
       outline = outline .. "if "
@@ -155,6 +167,7 @@ for line in table.iter(lines) do
       outline = outline .. " " .. word
     end
   end
+  outline = outline:gsub("//", "--")
   print(outline)
   output[#output + 1] = outline .. "\n"
 end

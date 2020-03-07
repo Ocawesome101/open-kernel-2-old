@@ -11,12 +11,6 @@ for _,t in pairs(os.tasks()) do
   end
 end
 
-if cls then
-  local w,h = gpu.getResolution()
-  gpu.fill(1,1,w,h," ")
-  gpu.setCursorPos(1,1)
-end
-
 while true do
   io.write("login: ")
   local name = read()
@@ -32,11 +26,16 @@ while true do
       shell = false
       local t = os.tasks()
       for k,v in pairs(t) do
-	if os.info(v).name == "/bin/sh.lua" then
-	  shell = true
-	end
+        if os.info(v).name == "/bin/sh.lua" then
+          shell = true
+        end
       end
       coroutine.yield()
+    end
+    if cls then
+      local w,h = gpu.getResolution()
+      gpu.fill(1, 1, w, h, " ")
+      gpu.setCursor(1, 1)
     end
   end
 end

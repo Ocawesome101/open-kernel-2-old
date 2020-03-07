@@ -54,8 +54,8 @@ if #args > 0 then
     end
   end
 else
-  local files = fs.list(shell.pwd()) or {}
-  local dir = shell.pwd()
+  local dir = shell.getWorkingDirectory()
+  local files = fs.list(dir) or {}
   
   table.sort(files)
   tabbedPrint(dir, files)
