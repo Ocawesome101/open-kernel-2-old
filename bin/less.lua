@@ -64,10 +64,12 @@ while true do
           top = top + 1
         end
       elseif code == 205 then -- Right arrow
-        edge = edge + 1
+        edge = edge + 5
       elseif code == 203 then -- Left arrow
-        if edge > 1 then
-          edge = edge - 1
+        if edge > 5 then
+          edge = edge - 5
+        else
+          edge = 1
         end
       end
     end
