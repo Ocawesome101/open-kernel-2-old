@@ -45,12 +45,14 @@ for k, v in ipairs(config.startup) do
   kernel.log("init: loading " .. v.id)
   local ok, err = loadfile(v.file)
   if not ok then
-    error("Failed to load " .. v.id .. ": " .. err, -1)
+    kernel.log("init: WARNING: Failed to load " .. v.id .. ": " .. err)
+    error(err, -1)
   end
   local ok, err = pcall(ok)
 --  local ok, err = os.spawn(ok, v.file)
   if not ok then
-    error(v.id .. " crashed: " .. err, -1)
+    kernel.log("init: WARNING: " .. v.id .. " crashed: " .. err)
+    error(err, -1)
   end
 end
 

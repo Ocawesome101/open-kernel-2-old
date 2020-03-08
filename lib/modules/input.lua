@@ -14,25 +14,32 @@ function _G.read(replace, history, default, hPos)
   local pos, scroll = #str, 0
   local w = gpu.getResolution()
   local sx = gpu.getCursor()
-
+  
   local function redraw(cursor)
     local cursorPos = sx + pos - scroll
     if sx + cursorPos >= w then
       scroll = (sx + pos) - w
     elseif cursorPos < 0 then
+      cursorPos = 0
       scroll = pos
+    end
+    if scroll < 0 then
+      scroll = 0
     end
 
     local cx, cy = gpu.getCursor()
     gpu.setCursor(sx, cy)
-    io.write((" "):rep(w - sx))
+    gpu.set(sx, cy, (" "):rep(w - sx + 1))
     gpu.setCursor(sx, cy)
     if replace then
-      io.write(replace:rep(#str):sub(scroll + 1, w - sx - 1))
+      io.write(replace:rep(#str):sub(scroll + 1))
     else
-      io.write(str:sub(scroll + 1, (w - sx) - 1))
+      io.write(str:sub(scroll + 1))
     end
     if cursor then
+      while cursorPos > w do
+        cursorPos = cursorPos - 1
+      end
       local oldc = gpu.get(cursorPos,cy)
       local oldf = gpu.getForeground()
       local oldb = gpu.getBackground()

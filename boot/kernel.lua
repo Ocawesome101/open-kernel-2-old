@@ -510,7 +510,7 @@ end
 
 kernel.log("Reading /etc/fstab")
 
--- /etc/fstab specifies filesystems to mount in locations other than /mnt, if any. Note that this is fileystem-specific and as such not included by default.
+-- /etc/fstab specifies filesystems to mount in locations other than /mnt, if any. Note that this is fileystem-specific and as such noin other news, I've t included by default.
 
 local fstab = {}
 
@@ -656,17 +656,350 @@ function fs.clean(path)
   return cleanPath(path)
 end
 
+kernel.log("Initializing fancy event handling")
+do
+  _G.event = {}
+  local pullSignal, pushSignal = computer.pullSignal, computer.pushSignal
+
+  event.push = function(e, ...)
+    kernel.log("events: Pushing signal " .. e)
+    pushSignal(e, ...)
+  end
+
+  local listeners = {
+    ["component_added"] = function(addr, ctype)
+      if ctype == "filesystem" then
+        fs.mount(addr)
+      elseif ctype == "eeprom" then
+        package.loaded["eeprom"] = kernel.__component.proxy(addr)
+      end
+      pushSignal("device_added", addr, ctype) -- for devfs processing. Bit hacky.
+    end,
+    ["component_removed"] = function(addr, ctype)
+      if ctype == "filesystem" then
+        fs.unmount(addr)
+      elseif ctype == "eeprom" then
+        package.loaded["eeprom"] = nil
+      end
+      pushSignal("device_removed", addr) -- again, for devfs processing, bit hacky, yadda yadda yadda
+    end
+  }
+
+  event.listen = function(evt, func)
+    checkArg(1, evt, "string")
+    checkArg(2, func, "function")
+    if listeners[evt] then
+      return false, "Event listener already in place for event " .. evt
+    else
+      listeners[evt] = func
+      return true
+    end
+  end
+
+  event.cancel = function(evt)
+    checkArg(1, evt, "string")
+    if not listeners[evt] then
+      return false, "No event listener for event " .. evt
+    else
+      listeners[evt] = nil
+      return true
+    end
+  end
+
+  event.pull = function(filter, timeout)
+    checkArg(1, filter, "string", "nil")
+    checkArg(2, timeout, "number", "nil")
+--    kernel.log("events: pulling event " .. (filter or "<any>") .. ", timeout " .. (tostring(timeout) or "none"))
+    if timeout then
+      local e = {pullSignal(timeout)}
+--      kernel.log("events: got " .. (e[1] or "nil"))
+      if listeners[e[1]] then
+        listeners[e[1]](table.unpack(e, 2, #e))
+      end
+      if e[i] == filter or not filter then
+        return table.unpack(e)
+      end
+    else
+      local e = {}
+      repeat
+        e = {pullSignal()}
+--        kernel.log("events: got " .. e[1])
+        if listeners[e[1]] then
+          listeners[e[1]](table.unpack(e, 2, #e))
+        end
+      until e[1] == filter or filter == nil
+      return table.unpack(e)
+    end
+  end
+end
+
+kernel.log("Initializing virtual components")
+do
+  local vcomponents = {}
+
+  local list, invoke, proxy, comtype = component.list, component.invoke, component.proxy, component.type
+
+  local ps = event.push
+
+  function component.create(componentAPI)
+    checkArg(1, componentAPI, "table")
+    kernel.log("vcomponent: Adding component: type " .. componentAPI.type .. ", addr " .. componentAPI.address)
+    vcomponents[componentAPI.address] = componentAPI
+    ps("component_added", componentAPI.address, componentAPI.type)
+  end
+
+  function component.remove(addr)
+    if vcomponents[addr] then
+      ps("component_removed", vcomponents[addr].address, vcomponents[addr].type)
+      vcomponents[addr] = nil
+      return true
+    end
+    return false
+  end
+
+  function component.list(ctype, match)
+    local matches = {}
+    for k,v in pairs(vcomponents) do
+      if v.type == ctype or not ctype then
+        matches[v.address] = v.type
+      end
+    end
+    local o = list(ctype, match)
+    local i = 1
+    local a = {}
+    for k,v in pairs(matches) do
+      a[#a+1] = k
+    end
+    for k,v in pairs(o) do
+      a[#a+1] = k
+    end
+    local function c()
+      if a[i] then
+        i = i + 1
+--        kernel.log(a[i - 1] .. " " .. (matches[a[i - 1]] or o[a[i - 1]]))
+        return a[i - 1], (matches[a[i - 1]] or o[a[i - 1]])
+      else
+        return nil
+      end
+    end
+    return setmetatable(matches, {__call = c})
+  end
+
+  function component.invoke(addr, operation, ...)
+    checkArg(1, addr, "string")
+    checkArg(2, operation, "string")
+    if vcomponents[addr] then
+--      kernel.log("vcomponent: " .. addr .. " " .. operation)
+      if vcomponents[addr][operation] then
+        return vcomponents[addr][operation](...)
+      end
+    end
+    return invoke(addr, operation, ...)
+  end
+
+function component.proxy(addr)
+    checkArg(1, addr, "string")
+    if vcomponents[addr] then
+      return vcomponents[addr]
+    else
+      return proxy(addr)
+    end
+  end
+
+  function component.type(addr)
+    checkArg(1, addr, "string")
+    if vcomponents[addr] then
+      return vcomponents[addr].type
+    else
+      return comtype(addr)
+    end
+  end
+
+  kernel.__component = component
+end
+
+kernel.log("Initializing virtual device FS")
+do
+  local dfs = {}
+
+  local devices = {}
+
+  local handles = {}
+
+  local function randAddr()
+    local str = ""
+    for i=1, 32, 1 do
+      local char = string.char(math.random(97, 102)) -- get a random hex char
+      local num = tostring(math.floor(math.random(0, 9)))
+      if math.random(0, 100) > 50 then -- randomization :D
+        str = str .. num
+      else
+        str = str .. char
+      end
+    end
+    str = table.concat({str:sub(1,8),str:sub(9,12),str:sub(13,16),str:sub(17,20),str:sub(21,32)}, "-")
+    return str
+  end
+
+  dfs.type = "filesystem"
+  dfs.address = randAddr()
+
+  local types = {
+    ["filesystem"] = "fs",
+    ["gpu"] = "gpu",
+    ["screen"] = "scrn",
+    ["keyboard"] = "kbd",
+    ["eeprom"] = "eeprom",
+    ["redstone"] = "rs",
+    ["computer"] = "comp",
+    ["disk_drive"] = "sr",
+    ["internet"] = "net",
+    ["modem"] = "net"
+  }
+
+  local function addDfsDevice(addr, dtype)
+    if addr == dfs.address then return end
+  --  kernel.log(addr .. " " .. dtype)
+    local path = "/" .. (types[dtype] or dtype)
+    if dtype == "filesystem" and kernel.__component.invoke(addr, "getLabel") == "devfs" then
+      return
+    end
+    local n = 0
+    for k,v in pairs(devices) do
+      if v.proxy and v.path and v.proxy.address then
+        if v.proxy.address == addr then
+          return
+        end
+        if v.proxy.type == dtype then
+          n = n + 1
+        end
+      end
+    end
+    path = path .. tostring(n)
+    kernel.log("devfs: adding device " .. addr .. " at /dev" .. path)
+    devices[#devices + 1] = {path = path, proxy = kernel.__component.proxy(addr)}
+  end
+
+  event.listen("device_added", addDfsDevice)
+
+  local function resolveDevice(d)
+    for k,v in pairs(devices) do
+      if v.path == d then
+        return v
+      end
+    end
+    return false, "No such device"
+  end
+
+  local function makeHandleEEPROM(eepromProxy, mode)
+    checkArg(1, eepromProxy, "table")
+    checkArg(2, mode, "string", "nil")
+    if eepromProxy.type ~= "eeprom" then return false, "Device is not an EEPROM" end
+    local d = {}
+    function d:read()
+      return eepromProxy.get(), "Failed to read EEPROM"
+    end
+    handles[#handles + 1] = d
+    return d, #handles
+  end
+
+  function dfs.open(dev, mode)
+    checkArg(1, dev, "string")
+    checkArg(2, mode, "string", "nil")
+    local device = resolveDevice(dev)
+    if device.proxy.type == "eeprom" then
+      local handle = makeHandleEEPROM(device, mode)
+      return handle
+    else
+      return false, "Only EEPROMs are currently supported for opening"
+    end
+  end
+
+  function dfs.isDirectory(d)
+    checkArg(1, d, "string")
+    if d == "/" then
+      return true
+    else
+      return false
+    end
+  end
+
+  function dfs.exists(f)
+    checkArg(1, f, "string")
+    kernel.log("devfs: checking existence " .. f)
+    if resolveDevice(f) or fs.clean(f) == "/" then
+      return true
+    else
+      return false
+    end
+  end
+
+  function dfs.list()
+    local l = {}
+    for k,v in pairs(devices) do
+      l[#l + 1] = fs.clean(v.path):sub(2)
+    end
+    return l
+  end
+
+  function dfs.permissions()
+    return 0
+  end
+
+  function dfs.lastModified()
+    return 0
+  end
+
+  function dfs.close(num)
+    handles[num] = nil
+  end
+
+  function dfs.spaceTotal()
+    return 1024
+  end
+
+  function dfs.isReadOnly()
+    return true
+  end
+
+  function dfs.getLabel() return "devfs" end
+  function dfs.setLabel() return true end
+
+  component.create(dfs)
+  fs.mount(dfs.address, "/dev")
+
+  for addr, ctype in component.list() do
+    addDfsDevice(addr, ctype)
+  end
+
+  _G.devfs = {
+    getAddress = function(device)
+      local proxy = resolveDevice(device)
+      return proxy.address
+    end,
+    poke = function(device, operation, ...)
+      local proxy = resolveDevice(device)
+      if proxy[operation] then
+        return proxy[operation](...)
+      end
+    end
+  }
+end
+
 kernel.log("Initializing cooperative scheduler")
 do
   local tasks = {}
   local pid = 1
   local currentpid = 0
   local timeout = 0.25
---  local event = require("event")
+  local freeMemory = computer.freeMemory
 
   function os.spawn(func, name)
     checkArg(1, func, "function")
     checkArg(2, name, "string")
+    if freeMemory() < 128 then
+      error("Out of memory", -1)
+    end
     kernel.log("scheduler: Spawning task " .. tostring(pid) .. " with ID " .. name)
     tasks[pid] = {
       coro = coroutine.create(func),
@@ -705,7 +1038,8 @@ do
   end
   
   function os.exit()
-    os.kill(os.pid())
+    os.kill(currentpid)
+    coroutine.yield()
   end
   
   function os.start() -- Start the scheduler
@@ -713,14 +1047,17 @@ do
     while #tasks > 0 do
       local eventData = {pullSignal(timeout)}
       for k, v in pairs(tasks) do
+        if freeMemory() < 256 then
+          error("Out of memory", -1)
+        end
         if v.coro and coroutine.status(v.coro) ~= "dead" then
           currentpid = k
 --          kernel.log("Current: " .. tostring(k))
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
           if not ok and err then
-            print("ERROR IN THREAD " .. tostring(k) .. ": " .. v.id)
+            local err = "ERROR IN THREAD " .. tostring(k) .. ": " .. v.id .. "\n" .. err .. debug.traceback(nil, 1)
+            kernel.log(err)
             print(err)
-            print(debug.traceback())
             kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died: " .. err)
             tasks[k] = nil
           end

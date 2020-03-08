@@ -2,38 +2,26 @@
 {
   startup = { -- APIs to load at startup
     [1] = {
-      id = "vcomponent",
-      file = "/lib/modules/vcomponent.lua"
+      id = "package",
+      file = "/lib/modules/package.lua"
     },
-    [2] = {
-      id = "libmanager",
-      file = "/lib/modules/libraries.lua"
-    },
-    [3] = {
-      id = "events",
-      file = "/lib/modules/events.lua"
-    },
---    [4] = { -- Enable this service for OpenOS `keyboard` compatibility. Otherwise, leave it, as it probably hogs memory.
---      id = "keyboardcompat",
+--    [3] = { -- Enable this service for OpenOS `keyboard` compatibility. Otherwise, leave it, as it probably hogs memory.
+--      id = "keyboard",
 --      file = "/lib/modules/keyboard.lua"
 --    },
-    [4] = {
+    [2] = {
       id = "input",
       file = "/lib/modules/input.lua"
     },
-    [5] = {
+    [3] = {
       id = "io",
       file = "/lib/modules/io.lua"
     },
-    [6] = {
-      id = "devfs",
-      file = "/lib/modules/devfs.lua"
-    },
-    [7] = {
+    [4] = {
       id = "components",
       file = "/lib/modules/components.lua"
     },
-    [8] = {
+    [5] = {
       id = "users",
       file = "/lib/modules/users.lua"
     }

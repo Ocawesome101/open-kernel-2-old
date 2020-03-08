@@ -23,7 +23,7 @@ if #args < 1 then
     end
   end
   for k,v in pairs(mts) do
-    print(text.padRight(v.address:sub(1, 8) .. " on " .. v.path, longestLabel + longestPath) .. (fs.get(v.path).isReadOnly() and " (ro)" or " (rw)") .. (v.label and " \"" .. v.label .. "\""))
+    print(text.padRight(v.address:sub(1, 8) .. " on " .. v.path, longestLabel + longestPath) .. (fs.get(v.path).isReadOnly() and " (ro)" or " (rw)") .. (" \"" .. (v.label or v.address) .. "\""))
   end
   return
 end

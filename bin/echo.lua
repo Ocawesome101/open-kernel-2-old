@@ -25,5 +25,5 @@ if str ~= "" and str ~= " " then
 end
 
 if not notrail then
-  write("\n")
+  io.write("\n")
 end
