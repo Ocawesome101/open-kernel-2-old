@@ -3,14 +3,13 @@
 local args, options = shell.parse(...)
 
 local verbose = options.v or options.verbose or false
-local exit = false
 
 local users = require("users")
 
 local usage = [[User Manager commands:
-help      :  Display this help.
-exit      :  Exit User Manager.
-list      :  List all currently registered users.
+help:        Display this help.
+exit:        Exit User Manager.
+list:        List all currently registered users.
 add [user]:  Add a user.
 del [user]:  Delete a user. If you are not root you will need the user's password.
 ]]
@@ -58,14 +57,14 @@ end
 print("User Manager 1.0.0-pre1 (c) 2020 Ocawesome101.")
 print("Type 'help' for help.")
 
-while not exit do
+while true do
   io.write("usermgr> ")
   local input = read()
   if input and input ~= "" then
     input = string.tokenize(" ", input)
     if input[1] == "exit" then
       print("Exiting User Manager. Have a nice day.")
-      exit = true
+      os.exit()
     elseif input[1] == "help" then
       print(usage)
     elseif input[1] == "add" then

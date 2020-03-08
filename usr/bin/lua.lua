@@ -4,17 +4,11 @@ local args, options = shell.parse(...)
 
 local LUA_ENV = table.copy(_G)
 
-local exit = false
-
-function LUA_ENV.exit()
-  exit = true
-end
-
 gpu.setForeground(0xFFFF00)
 print(_VERSION)
 
 local history = table.new()
-while not exit do
+while true do
   gpu.setForeground(0xFFFF00)
   io.write("lua> ")
   local inp = read(nil, history)

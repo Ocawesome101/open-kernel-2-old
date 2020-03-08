@@ -14,12 +14,16 @@ event.listeners = {
   ["component_added"] = function(addr, ctype)
     if ctype == "filesystem" then
       fs.mount(addr)
+    elseif ctype == "eeprom" then
+      package.loaded["eeprom"] = component.proxy(addr)
     end
     event.push("device_added", addr, ctype) -- for devfs processing. Bit hacky.
   end,
   ["component_removed"] = function(addr, ctype)
     if ctype == "filesystem" then
       fs.unmount(addr)
+    elseif ctype == "eeprom" then
+      package.loaded["eeprom"] = nil
     end
     event.push("device_removed", addr) -- again, for devfs processing, bit hacky, yadda yadda yadda
   end

@@ -8,6 +8,8 @@ local flags = {
   verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded. Disabling this does seem to improve boot times..
 }
 
+-- Leave the rest alone. --
+
 local addr, invoke = computer.getBootAddress(), component.invoke
 local p = computer.pullSignal
 

@@ -3,6 +3,7 @@
 local args, options = shell.parse(...)
 
 local devfs = require("devfs")
+local text = require("text")
 
 local usage = [[mount (c) 2020 Ocawesome101 under the MIT license.
 usage: mount /dev/fsX /path
@@ -11,8 +12,18 @@ usage: mount /dev/fsX /path
 
 if #args < 1 then
   local mts = fs.mounts()
+  local longestPath = 0
+  local longestLabel = 0
   for k,v in pairs(mts) do
-    print((v.label and "\"" .. v.label .. "\"" or v.address) .. " on " .. v.path)
+    if #v.path > longestPath then
+      longestPath = #v.path
+    end
+    if v.label and #v.label > longestLabel then
+      longestLabel = #v.label
+    end
+  end
+  for k,v in pairs(mts) do
+    print(text.padRight(v.address:sub(1, 8) .. " on " .. v.path, longestLabel + longestPath) .. (fs.get(v.path).isReadOnly() and " (ro)" or " (rw)") .. (v.label and " \"" .. v.label .. "\""))
   end
   return
 end

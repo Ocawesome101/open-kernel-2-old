@@ -24,8 +24,8 @@ end
 local function genLibError(n)
   local err = "Library '" .. n .. "' not found:\n  no field package.loaded['" .. n .. "']"
   for path in string.tokenize(";", package.path) do
-    err = err .. "\n  no file '" .. resolveModule(path, n) .. "'"
-    err = err .. "\n  no file '" .. resolveModule(path, n) .. "'"
+    err = err .. "\n\tno file '" .. resolveModule(path, n) .. "'"
+    err = err .. "\n\tno file '" .. resolveModule(path, n) .. "'"
   end
   return err
 end

@@ -4,7 +4,7 @@ local users = require("users")
 
 _G.shell = {}
 
-shell._VERSION = "Open Shell 2.0.2"
+shell._VERSION = "Open Shell 2.1.0"
 
 local env = {
   HOME = users.home(),
@@ -52,7 +52,14 @@ if not fs.exists(env.PWD) then
   fs.makeDirectory(env.PWD)
 end
 
-local shrc = config.shrc or env.PWD .. "/.shrc"
+local function split(...) -- string.tokenize is inadequate for this
+  local str = table.concat({...}, " ")
+  local words = table.new()
+  for word in str:gmatch("([^%\\ ]+)(\\?)") do
+    words:insert(word)
+  end
+  return words
+end
 
 function shell.getWorkingDirectory()
   return env.PWD
@@ -112,7 +119,7 @@ function shell.execute(cmd, cmd2, ...) -- It is probably best to call this with 
     noSeparate = true
     cmd = cmd2
   end
-  local exec = string.tokenize(" ", cmd, ...)
+  local exec = split(" ", cmd, ...)
   local cmd = exec[1]
   local cmdPath = ""
   local function check(p)

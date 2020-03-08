@@ -131,7 +131,7 @@ end
 
 _G.kernel = {}
 
-kernel._VERSION = "Open Kernel 2.0.2"
+kernel._VERSION = "Open Kernel 2.1.0"
 
 pcall(bootfs.rename("/boot/log", "/boot/log.old"))
 
@@ -414,7 +414,7 @@ function fs.copy(source, dest)
   end
   repeat
     local data = s.read(0xFFFF)
-    d:write((data or ""))
+    d.write((data or ""))
   until not data
   s.close()
   d.close()
@@ -656,13 +656,95 @@ function fs.clean(path)
   return cleanPath(path)
 end
 
-kernel.log("Loading init: " .. init)
+kernel.log("Initializing cooperative scheduler")
+do
+  local tasks = {}
+  local pid = 1
+  local currentpid = 0
+  local timeout = 0.25
+--  local event = require("event")
+
+  function os.spawn(func, name)
+    checkArg(1, func, "function")
+    checkArg(2, name, "string")
+    kernel.log("scheduler: Spawning task " .. tostring(pid) .. " with ID " .. name)
+    tasks[pid] = {
+      coro = coroutine.create(func),
+      id = name,
+      pid = pid,
+      parent = currentpid
+    }
+    pid = pid + 1
+    return pid - 1
+  end
+
+  function os.kill(pid)
+    checkArg(1, pid, "number")
+    if not tasks[pid] then return false, "No such process" end
+    kernel.log("scheduler: Killing task " .. tasks[pid].id .. " (PID ".. tostring(pid) .. ")")
+    tasks[pid] = nil
+  end
+
+  function os.tasks()
+    local r = {}
+    for k,v in pairs(tasks) do
+      r[#r + 1] = k
+    end
+    return r
+  end
+
+  function os.pid()
+    return currentpid
+  end
+
+  function os.info(pid)
+    checkArg(1, pid, "number", "nil")
+    local pid = pid or os.pid()
+    if not tasks[pid] then return false, "No such process" end
+    return {name = tasks[pid].id, parent = tasks[pid].parent, pid = tasks[pid].pid}
+  end
+  
+  function os.exit()
+    os.kill(os.pid())
+  end
+  
+  function os.start() -- Start the scheduler
+    os.start = nil
+    while #tasks > 0 do
+      local eventData = {pullSignal(timeout)}
+      for k, v in pairs(tasks) do
+        if v.coro and coroutine.status(v.coro) ~= "dead" then
+          currentpid = k
+--          kernel.log("Current: " .. tostring(k))
+          local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
+          if not ok and err then
+            print("ERROR IN THREAD " .. tostring(k) .. ": " .. v.id)
+            print(err)
+            print(debug.traceback())
+            kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died: " .. err)
+            tasks[k] = nil
+          end
+        elseif v.coro then
+          kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died")
+          tasks[k] = nil
+        end
+      end
+    end
+    kernel.log("scheduler: all tasks exited")
+    shutdown()
+  end
+end
+
+kernel.log("Loading init from " .. init)
 local ok, err = loadfile(init)
 if not ok then
   error(err, -1)
 end
 
-local s, e = pcall(ok, flags.runlevel)
+--local s, e = pcall(ok, flags.runlevel)
+local s, e = os.spawn(function()return ok(flags.runlevel)end, init)
 if not s then
   error(e, -1)
 end
+
+os.start()
