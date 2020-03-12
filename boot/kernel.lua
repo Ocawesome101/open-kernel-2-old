@@ -16,7 +16,7 @@ for addr, ctype in component.list() do
   elseif ctype == "filesystem" then
     filesystems[addr] = component.proxy(addr)
   elseif ctype == "screen" then
-    if gpu and then
+    if gpu then
       gpu.bind(addr)
     end
   end
