@@ -4,7 +4,7 @@ local users = require("users")
 
 _G.shell = {}
 
-shell._VERSION = "Open Shell 2.1.0"
+shell._VERSION = "Open Shell 2.1.1"
 
 local env = {
   HOME = users.home(),
@@ -114,9 +114,9 @@ end
 function shell.execute(cmd, cmd2, ...) -- It is probably best to call this with pcall, considering the liberal use of error().
   checkArg(1, cmd, "string", "boolean")
   checkArg(2, cmd2, "string", "nil")
-  local noSeparate = false
+  local detach = false
   if type(cmd) == "boolean" then
-    noSeparate = true
+    datach = true
     cmd = cmd2
   end
   local exec = split(" ", cmd, ...)
@@ -144,8 +144,8 @@ function shell.execute(cmd, cmd2, ...) -- It is probably best to call this with 
   if not ok then
     return error(err)
   end
-  if noSeparate then
-    local s,r = pcall(function()return ok(table.unpack(exec, 2, #exec))end)
+  if detach then
+    local s, r = pcall(function()return ok(table.unpack(exec, 2, #exec))end)
     if not s then
       return error(r)
     end

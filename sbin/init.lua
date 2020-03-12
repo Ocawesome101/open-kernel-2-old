@@ -1,6 +1,6 @@
 -- OpenRC init system --
 
-local maxRunlevel = ... or 3
+local maxRunlevel = ... or 2
 
 local rc = {}
 local runlevel = 1
@@ -10,13 +10,16 @@ function computer.runlevel()
   return runlevel
 end
 
-rc._VERSION = "OpenRC 2.1"
+rc._VERSION = "OpenRC 2.1.1"
 
 kernel.log(rc._VERSION .. " starting up " .. kernel._VERSION)
 
-write("Welcome to ")
 gpu.setForeground(0x00DD11)
-print(rc._VERSION)
+write(rc._VERSION)
+gpu.setForeground(0xFFFFFF)
+write(" starting up ")
+gpu.setForeground(0xFFFF00)
+print(kernel._VERSION)
 gpu.setForeground(0xFFFFFF)
 
 kernel.log("init: Reading configuration from /etc/inittab")
@@ -49,7 +52,6 @@ for k, v in ipairs(config.startup) do
     error(err, -1)
   end
   local ok, err = pcall(ok)
---  local ok, err = os.spawn(ok, v.file)
   if not ok then
     kernel.log("init: WARNING: " .. v.id .. " crashed: " .. err)
     error(err, -1)

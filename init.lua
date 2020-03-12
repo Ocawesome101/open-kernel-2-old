@@ -5,7 +5,8 @@ local flags = {
   init = "/sbin/init.lua",
   runlevel = 2, -- Runlevel the system should attempt to reach
   disableLogging = true, -- Enable this option if you're running from a read-only FS or you want faster boot. Disable if you want system logs (i.e. for debugging) and aren't running from a ROFS
-  verbose = true -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded. Disabling this does seem to improve boot times..
+  verbose = true, -- Whether to log boot or not, otherwise you will get a black screen until the shell is loaded. Disabling this does seem to improve boot times.
+  processTimeout = 0.05 -- The timeout passed to computer.pullSignal in the scheduler. This has a fairly direct impact on performance.
 }
 
 -- Leave the rest alone. --

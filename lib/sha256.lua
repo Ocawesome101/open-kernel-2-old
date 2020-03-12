@@ -6,12 +6,12 @@ local component = require("component")
 local sha = {}
 
 local shamode = "software"
---if require("data") and not component.list("ocemu")() and not component.list("sandbox")() then
---  shamode = "hardware"
---end
+if require("data") and require("data").sha256 then
+  shamode = "hardware"
+end
 
 if shamode == "hardware" then
-  datac = require("data")
+  local datac = require("data")
   function sha.sha256(data)
     local d = datac.sha256(data)
     return (d:gsub('.',function(c)

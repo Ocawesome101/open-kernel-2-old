@@ -20,3 +20,5 @@ local ok, err = os.kill(tonumber(args[1]))
 if not ok then
   return print(err)
 end
+
+coroutine.yield()

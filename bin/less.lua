@@ -48,6 +48,7 @@ gpu.fill(1, 1, w, h, " ")
 
 while true do
   redraw()
+  coroutine.yield()
   local e, _, id, code = event.pull()
   if e == "key_down" then
     if id >= 32 and id <= 127 then

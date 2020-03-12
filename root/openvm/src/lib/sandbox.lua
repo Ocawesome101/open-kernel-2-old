@@ -1,11 +1,7 @@
 -- Sandboxing!
-
 local sandbox = {}
-
 sandbox.component = {}
-
 local components = {}
-
 function sandbox.component.list(id)
   checkArg(1, id, "string", "nil")
   local rtn = {}
@@ -25,7 +21,6 @@ function sandbox.component.list(id)
   end
   return setmetatable(rtn, {__call = call})
 end
-
 function sandbox.component.proxy(addr)
   checkArg(1, addr, "string")
   if components[addr] then
@@ -34,7 +29,6 @@ function sandbox.component.proxy(addr)
     return nil, "no such component"
   end
 end
-
 function sandbox.component.invoke(addr, operation, ...)
   checkArg(1, addr, "string")
   checkArg(1, operation, "string")
@@ -44,7 +38,6 @@ function sandbox.component.invoke(addr, operation, ...)
     return nil, "no such component"
   end
 end
-
 function sandbox.component.type(addr)
   checkArg(1, addr, "string")
   if components[addr] then
@@ -53,7 +46,6 @@ function sandbox.component.type(addr)
     return nil, "no such component"
   end
 end
-
 function sandbox.component.slot(addr)
   checkArg(1, addr, "string")
   if components[addr] then
@@ -62,7 +54,6 @@ function sandbox.component.slot(addr)
     return nil, "no such component"
   end
 end
-
 function sandbox.component.get(addr, ctype)
   for k, v in pairs(components) do
     if k:sub(1, #addr) == addr and v.type == ctype then
@@ -71,15 +62,14 @@ function sandbox.component.get(addr, ctype)
   end
   return nil, "no such component"
 end
-
-sandbox.table = tcopy(table)
+sandbox.table = table.copy(table)
 sandbox.table.copy, sandbox.table.iter, sandbox.table.serialize = nil, nil, nil
-sandbox.string = tcopy(string)
+sandbox.string = table.copy(string)
 sandbox.string.tokenize = nil
-sandbox.math = tcopy(math)
+sandbox.math = table.copy(math)
 sandbox.pcall = pcall
 sandbox.xpcall = xpcall
-sandbox.debug = tcopy(debug)
+sandbox.debug = table.copy(debug)
 sandbox.assert = assert
 sandbox.setmetatable = setmetatable
 sandbox.getmetatable = getmetatable
@@ -98,7 +88,7 @@ sandbox._VERSION = _VERSION
 sandbox.unicode = table.copy(require("unicode"))
 sandbox.computer = {}
 local c = require("computer")
-local event_queue = {}
+local event_queue = table.new()
 function sandbox.computer.shutdown(b)
 --  shutdown = true
 end
@@ -115,6 +105,7 @@ function sandbox.computer.pullSignal(t)
   if t and t == 0 then
     return
   else
+    event_queue:insert(computer.pullSignal(t))
     local e = event_queue[1]
     if e then
       table.remove(event_queue, 1)
@@ -128,3 +119,5 @@ function sandbox.computer.pushSignal(s, ...)
 end
 sandbox.tonumber = tonumber
 sandbox.tostring = tostring
+sandbox.select = select
+sandbox.next = next

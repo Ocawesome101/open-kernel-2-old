@@ -16,16 +16,14 @@ end
 kernel.log("users: Reading /etc/passwd")
 local passwd, err = config.load("/etc/passwd")
 if not passwd then
-  error(err)
+  passwd = {}
+  kernel.log("WARNING: " .. err)
 end
 
 local users = {}
 
 local function encrypt(str, salt)
   local result = sha.sha256(str .. salt)
-  for i=1, 64, 1 do
-    result = sha.sha256(result .. salt)
-  end
   return result
 end
 

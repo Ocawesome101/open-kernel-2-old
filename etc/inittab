@@ -1,27 +1,23 @@
 -- OpenRC configuration --
 {
   startup = { -- APIs to load at startup
-    [1] = {
+    {
       id = "package",
       file = "/lib/modules/package.lua"
     },
---    [3] = { -- Enable this service for OpenOS `keyboard` compatibility. Otherwise, leave it, as it probably hogs memory.
---      id = "keyboard",
---      file = "/lib/modules/keyboard.lua"
---    },
-    [2] = {
+    { -- This is primarily for OpenOS compatibility but is useful for keyboard shortcuts too
+      id = "keyboard",
+      file = "/lib/modules/keyboard.lua"
+    },
+    {
       id = "input",
       file = "/lib/modules/input.lua"
     },
-    [3] = {
+    {
       id = "io",
       file = "/lib/modules/io.lua"
     },
-    [4] = {
-      id = "components",
-      file = "/lib/modules/components.lua"
-    },
-    [5] = {
+    {
       id = "users",
       file = "/lib/modules/users.lua"
     }

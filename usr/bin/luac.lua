@@ -35,7 +35,7 @@ local function proc(c)
     return r
   elseif cmd == "##include" then
     print("luac: include " .. pwd .. "/" .. seg[1])
-    local handle, err = fs.open(pwd .. "/" .. seg[1], "r")
+    local handle, err = io.open(pwd .. "/" .. seg[1], "r")
     if not handle then
       return false, pwd .. "/" .. seg[1] .. ": " .. err
     end
@@ -67,13 +67,13 @@ end
 for i=1, #args, 1 do
   print("luac: running preprocessor on " .. args[i])
   local d, f = procfname(shell.resolve(args[i]))
-  local handle, err = fs.open(d .. "/" .. f)
+  local handle, err = io.open(d .. "/" .. f)
   if not handle then
     return false, err, error("luac: " .. d .. "/" .. f .. ": " .. err)
   end
   local data = handle:readAll()
   handle:close()
-  local out = fs.open(d .. "/" .. f, "w")
+  local out = io.open(options.out or (d .. "/" .. f), "w")
   for line in data:gmatch("[^\n]+") do
     local ln, err = procline(line, d)
     if not ln then

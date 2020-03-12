@@ -16,7 +16,7 @@ for addr, ctype in component.list() do
   elseif ctype == "filesystem" then
     filesystems[addr] = component.proxy(addr)
   elseif ctype == "screen" then
-    if gpu then
+    if gpu and then
       gpu.bind(addr)
     end
   end
@@ -131,7 +131,7 @@ end
 
 _G.kernel = {}
 
-kernel._VERSION = "Open Kernel 2.1.0"
+kernel._VERSION = "Open Kernel 2.1.3"
 
 pcall(bootfs.rename("/boot/log", "/boot/log.old"))
 
@@ -409,15 +409,15 @@ function fs.copy(source, dest)
   end
   local d, err = dproxy.open(dpath, "w")
   if not d then
-    s:close()
+    sproxy.close(s)
     return false, err
   end
   repeat
-    local data = s.read(0xFFFF)
-    d.write((data or ""))
+    local data = sproxy.read(s, 0xFFFF)
+    dproxy.write(d, (data or ""))
   until not data
-  s.close()
-  d.close()
+  sproxy.close(s)
+  dproxy.close(d)
   return true
 end
 
@@ -797,7 +797,7 @@ do
     return invoke(addr, operation, ...)
   end
 
-function component.proxy(addr)
+  function component.proxy(addr)
     checkArg(1, addr, "string")
     if vcomponents[addr] then
       return vcomponents[addr]
@@ -818,7 +818,7 @@ function component.proxy(addr)
   kernel.__component = component
 end
 
-kernel.log("Initializing virtual device FS")
+kernel.log("Initializing device FS")
 do
   local dfs = {}
 
@@ -826,35 +826,41 @@ do
 
   local handles = {}
 
-  local function randAddr()
-    local str = ""
-    for i=1, 32, 1 do
-      local char = string.char(math.random(97, 102)) -- get a random hex char
-      local num = tostring(math.floor(math.random(0, 9)))
-      if math.random(0, 100) > 50 then -- randomization :D
-        str = str .. num
-      else
-        str = str .. char
-      end
+  -- Generate a component address --
+  local s = {4,2,2,2,6}
+  local addr = ""
+  local p = 0
+
+  for _,_s in ipairs(s) do
+    if #addr > 0 then
+      addr = addr .. "-"
     end
-    str = table.concat({str:sub(1,8),str:sub(9,12),str:sub(13,16),str:sub(17,20),str:sub(21,32)}, "-")
-    return str
+    for _=1, _s, 1 do
+      local b = math.random(0, 255)
+      if p == 6 then
+        b = (b & 0x0F) | 0x40
+      elseif p == 8 then
+        b = (b & 0x3F) | 0x80
+      end
+      addr = addr .. ("%02x"):format(b)
+      p = p + 1
+    end
   end
 
   dfs.type = "filesystem"
-  dfs.address = randAddr()
+  dfs.address = addr
 
   local types = {
     ["filesystem"] = "fs",
     ["gpu"] = "gpu",
     ["screen"] = "scrn",
-    ["keyboard"] = "kbd",
+    ["keyboard"] = "kb",
     ["eeprom"] = "eeprom",
     ["redstone"] = "rs",
     ["computer"] = "comp",
     ["disk_drive"] = "sr",
-    ["internet"] = "net",
-    ["modem"] = "net"
+    ["internet"] = "inet",
+    ["modem"] = "mnet"
   }
 
   local function addDfsDevice(addr, dtype)
@@ -875,7 +881,7 @@ do
         end
       end
     end
-    path = path .. tostring(n)
+    path = path .. n
     kernel.log("devfs: adding device " .. addr .. " at /dev" .. path)
     devices[#devices + 1] = {path = path, proxy = kernel.__component.proxy(addr)}
   end
@@ -934,10 +940,14 @@ do
     end
   end
 
-  function dfs.list()
+  function dfs.list(p)
+    checkArg(1, p, "string")
     local l = {}
+    if not dfs.isDirectory(p) then
+      return false, "Not a directory"
+    end
     for k,v in pairs(devices) do
-      l[#l + 1] = fs.clean(v.path):sub(2)
+      l[#l + 1] = fs.clean(v.path):sub(#p + 1)
     end
     return l
   end
@@ -991,9 +1001,9 @@ do
   local tasks = {}
   local pid = 1
   local currentpid = 0
-  local timeout = 0.25
+  local timeout = (type(flags.processTimeout) == "number" and flags.processTimeout) or 0.10
   local freeMemory = computer.freeMemory
-
+    
   function os.spawn(func, name)
     checkArg(1, func, "function")
     checkArg(2, name, "string")
@@ -1014,6 +1024,7 @@ do
   function os.kill(pid)
     checkArg(1, pid, "number")
     if not tasks[pid] then return false, "No such process" end
+    if pid == 1 then return false, "Cannot kill init" end
     kernel.log("scheduler: Killing task " .. tasks[pid].id .. " (PID ".. tostring(pid) .. ")")
     tasks[pid] = nil
   end
@@ -1055,7 +1066,7 @@ do
 --          kernel.log("Current: " .. tostring(k))
           local ok, err = coroutine.resume(v.coro, table.unpack(eventData))
           if not ok and err then
-            local err = "ERROR IN THREAD " .. tostring(k) .. ": " .. v.id .. "\n" .. err .. debug.traceback(nil, 1)
+            local err = "ERROR IN THREAD " .. tostring(k) .. ": " .. v.id .. "\n" .. debug.traceback(err, 1)
             kernel.log(err)
             print(err)
             kernel.log("scheduler: Task " .. v.id .. " (PID " .. tostring(k) .. ") died: " .. err)
@@ -1079,7 +1090,7 @@ if not ok then
 end
 
 --local s, e = pcall(ok, flags.runlevel)
-local s, e = os.spawn(function()return ok(flags.runlevel)end, init)
+local s, e = os.spawn(function()return ok(flags.runlevel)end, "[init]")
 if not s then
   error(e, -1)
 end

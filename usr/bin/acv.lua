@@ -21,7 +21,7 @@ end
 local src = shell.resolve(args[1])
 local dest = args[2]
 if dest:sub(1, 1) ~= "/" then
-  dest = fs.clean(shell.pwd() .. "/" .. dest)
+  dest = fs.clean(os.getenv("PWD") .. "/" .. dest)
 end
 
 if pack then

@@ -55,7 +55,7 @@ function _G.read(replace, history, default, hPos)
 
   local c = true
   while true do
-    local e, _, p1, p2 = event.pull(nil, 0.7)
+    local e, _, p1, p2 = event.pull(nil, 0.5)
     if not e then
       redraw(c)
       c = not c

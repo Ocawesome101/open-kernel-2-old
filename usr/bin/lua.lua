@@ -27,14 +27,15 @@ while true do
   else
     exec, reason = load("return " .. inp, "=stdin", "t", LUA_ENV)
     if not exec then
-      exec, reason = load(command, "=stdin", "t", LUA_ENV)
+      exec, reason = load(inp, "=stdin", "t", LUA_ENV)
     end
   end
   if exec then
     local result = {pcall(exec)}
-    if not result then
-      print(tostring(result[2]))
-      print(debug.traceback(nil, 0))
+    if not result[1] and result[2] then
+      print(debug.traceback(result[2]))
+    elseif not result[1] then
+      print("nil")
     else
       local status, returned = pcall(function() for i = 2, #result, 1 do print(type(result[i]) == "table" and table.serialize(result[i]) or result[i]) end end)
       if not status then

@@ -4,7 +4,7 @@ local args, options = shell.parse(...)
 local config = require("config")
 local target = args[1] or "all"
 
-local dir = shell.pwd()
+local dir = os.getenv("PWD")
 
 if not fs.exists(fs.clean(dir .. "/OMakefile")) then
   print("ocmake: *** No OMakefile found. Stop.")
@@ -31,7 +31,7 @@ local function make(t)
   if makefile[t].exec then
     for command in table.iter(makefile[t].exec) do
       print(command)
-      local ok, ret = pcall(function()return shell.exec(command)end)
+      local ok, ret = pcall(function()return shell.execute(command)end)
       if not ok then
         print("ocmake: *** Target '" .. t .. "' failed: " .. ret)
         return false

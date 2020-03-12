@@ -7,7 +7,7 @@ local pkg = {}
 local acv = require("archive")
 local cfg = require("config")
 
-local packages = cfg.load("/usr/share/openpkg/installed.cfg")
+local packages = cfg.load("/usr/share/openpkg/installed.cfg") or {}
 
 function pkg.installPackage(file)
   checkArg(1, file, "string")
@@ -16,11 +16,11 @@ function pkg.installPackage(file)
   end
   print("openpkg: Parsing package configuration")
   if file:sub(-4) == ".acv" then
-    acv.unpack(file, file:sub(1, -5))
+    acv.unpack(file, fs.clean("/tmp/" .. fs.name(file:sub(1, -5))))
   else
     return false, "File " .. file .. " does not have the .acv extension"
   end
-  local path = file:sub(1, -5)
+  local path = fs.clean("/tmp/" .. fs.name(file:sub(1, -5)))
 --  print(path .. "/package.cfg")
   if not fs.exists(path .. "/package.cfg") then
     return false, "Package contains no package.cfg"

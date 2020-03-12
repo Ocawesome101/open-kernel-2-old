@@ -19,6 +19,9 @@ while true do
     print(err)
   else
     local ok, err = loadfile("/bin/sh.lua")
+    if not ok then
+      error(err)
+    end
     os.spawn(ok, "/bin/sh.lua")
     coroutine.yield()
     local shell = true

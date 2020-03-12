@@ -31,7 +31,7 @@ function acv.unpack(file, dest)
   local data = handle:readAll()
   handle:close()
   local outhandle
-  for line in string.tokenize("\n", data) do
+  for line in data:gmatch("[^\n]+") do
     local linedata, text = getData(line)
     if not linedata[1] then
       if outhandle then
@@ -43,7 +43,7 @@ function acv.unpack(file, dest)
         fs.makeDirectory(dest .. "/" .. linedata[3])
       else
         if outhandle then outhandle:close() end
-        outhandle = fs.open(dest .. "/" .. linedata[3], "w")
+        outhandle = io.open(dest .. "/" .. linedata[3], "w")
       end
     end
   end
@@ -82,7 +82,7 @@ function acv.pack(dir, dest)
     return false, dir .. ": No such file or directory"
   end
   DESTFILE = fs.clean(dest)
-  local output, err = fs.open(dest, "w")
+  local output, err = io.open(dest, "w")
   writeData(dir, output)
   output:close()
   return true

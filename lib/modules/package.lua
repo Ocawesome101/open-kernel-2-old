@@ -9,6 +9,7 @@ package.loaded = {
   ["string"] = string,
   ["table"] = table,
   ["math"] = math,
+  ["bit32"] = bit32,
   ["coroutine"] = coroutine,
   ["component"] = component,
   ["computer"] = computer,
@@ -71,5 +72,14 @@ function _G.require(library)
     local a, r = dofile(path)
     if a and type(a) == "table" then package.loaded[library] = a end
     return a, r
+  end
+end
+
+local component = require("component")
+
+for addr, ctype in component.list() do
+  if ctype ~= "filesystem" and ctype ~= "gpu" and ctype ~= "screen" and ctype ~= "keyboard" and ctype ~= "sandbox" and not package.loaded[ctype] then
+    kernel.log("components: creating proxy: type " .. ctype .. ", address " .. addr)
+    package.loaded[ctype] = component.proxy(addr)
   end
 end
